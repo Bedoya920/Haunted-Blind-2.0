@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &82894231
+--- !u!1 &1865573193
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,13 +127,13 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 82894238}
-  - component: {fileID: 82894237}
-  - component: {fileID: 82894236}
-  - component: {fileID: 82894235}
-  - component: {fileID: 82894234}
-  - component: {fileID: 82894233}
-  - component: {fileID: 82894232}
+  - component: {fileID: 1865573200}
+  - component: {fileID: 1865573199}
+  - component: {fileID: 1865573198}
+  - component: {fileID: 1865573197}
+  - component: {fileID: 1865573196}
+  - component: {fileID: 1865573195}
+  - component: {fileID: 1865573194}
   m_Layer: 0
   m_Name: VoiceSystemManager
   m_TagString: Untagged
@@ -141,13 +141,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &82894232
+--- !u!114 &1865573194
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 82894231}
+  m_GameObject: {fileID: 1865573193}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 088bf363ed2b4fe41a7a07714c099681, type: 3}
@@ -155,13 +155,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   contextProvider: {fileID: 0}
   enableDebugLogs: 1
---- !u!114 &82894233
+--- !u!114 &1865573195
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 82894231}
+  m_GameObject: {fileID: 1865573193}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 749e27afd9ae73f438aaf44f95475eae, type: 3}
@@ -169,13 +169,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useDemoData: 1
   eventManager: {fileID: 0}
---- !u!114 &82894234
+--- !u!114 &1865573196
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 82894231}
+  m_GameObject: {fileID: 1865573193}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 790a981bf4f785049b8b981b8801820a, type: 3}
@@ -183,28 +183,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   promptTemplates: {fileID: 0}
   commandLibrary: {fileID: 0}
---- !u!114 &82894235
+--- !u!114 &1865573197
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 82894231}
+  m_GameObject: {fileID: 1865573193}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e507687e07216b4da05238820035ecc, type: 3}
+  m_Script: {fileID: 11500000, guid: 2d34390b3db8e9d4da811ca4c280937d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  language: es-ES
-  speechRate: 1
-  pitch: 1
---- !u!114 &82894236
+  voice: Microsoft Sabina Desktop
+  rate: 0
+  volume: 100
+--- !u!114 &1865573198
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 82894231}
+  m_GameObject: {fileID: 1865573193}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a1cb6168cea87b74da7cafb6b80ab101, type: 3}
@@ -212,13 +212,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   language: es-ES
   confidenceLevel: 1
---- !u!114 &82894237
+--- !u!114 &1865573199
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 82894231}
+  m_GameObject: {fileID: 1865573193}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3149b9301b723214e82c9bee8057d8d4, type: 3}
@@ -229,18 +229,18 @@ MonoBehaviour:
   aiAssistant: {fileID: 0}
   contextProvider: {fileID: 0}
   commandExecutor: {fileID: 0}
-  ttsConfig: {fileID: 11400000, guid: 08bde29b2fff4e841a4533d1c46f4bc2, type: 2}
-  commandLibrary: {fileID: 11400000, guid: 6416b65cdbf1e1b469931aab9efd9e59, type: 2}
-  promptTemplates: {fileID: 11400000, guid: a292f067cfee5044c8af1d86d75a35c3, type: 2}
+  ttsConfig: {fileID: 0}
+  commandLibrary: {fileID: 0}
+  promptTemplates: {fileID: 0}
   enableDebugLogs: 1
   autoStartListening: 1
---- !u!4 &82894238
+--- !u!4 &1865573200
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 82894231}
+  m_GameObject: {fileID: 1865573193}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -253,4 +253,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 82894238}
+  - {fileID: 1865573200}
