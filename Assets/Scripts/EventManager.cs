@@ -4,13 +4,12 @@ using UnityEngine;
 
 public class EventManager : MonoBehaviour
 {
-    [SerializeField]private ScriptableObject[] mainEvents;
-    [SerializeField]private ScriptableObject[] randomEvents;
+    public EventLists eventos;
 
-    public int randomEventAmount;
-
-    public ScriptableObject[] MainEvents => mainEvents;
-    public ScriptableObject[] RandomEvents => randomEvents;
+    public void Inicializar(string e)
+    {
+        eventos = JSonUtility.fromJSON<EventLists>(e);
+    }
 
     //Testing stuff
     void Awake()
@@ -31,6 +30,7 @@ public class EventManager : MonoBehaviour
         }
     }
 
+    //Cargar desde el JSonUtility
     private void FillMainEventList()
     {
         mainEvents = LoadAllSO("SO/SO_Main");
@@ -41,6 +41,7 @@ public class EventManager : MonoBehaviour
         }
     }
 
+    //Cargar desde el JSonUtility
     private void FillRandomEventList(int randomAmount)
     {
         if (randomAmount <= 0)
@@ -55,7 +56,7 @@ public class EventManager : MonoBehaviour
             print("la carpeta Assets/SO/SO_Random está vacia");
         }
 
-        var list = new List<ScriptableObject>(allRandom);
+        var list = new List<HBEvents>(allRandom);
         Shuffle(list);
 
         int take = Mathf.Clamp(randomAmount, 0, list.Count);
@@ -77,23 +78,23 @@ public class EventManager : MonoBehaviour
             return null;
         }
 
-        //Necesario borra ese evento?
+        //No quitarlas || Mandar a pila de descarte      (Decidir)
         return randomEvents[index].name;
     }
 
-    private ScriptableObject[] LoadAllSO(string folder)
+    private HBEvents[] LoadAllSO(string folder)
     {
-        ScriptableObject[] loadedObjects = Resources.LoadAll<ScriptableObject>(folder);
+        HBEvents[] loadedObjects = Resources.LoadAll<ScriptableObject>(folder);
         
         if (loadedObjects == null || loadedObjects.Length == 0)
         {
             print($"No se encontraron ScriptableObjects en Resources/{folder}");
-            return new ScriptableObject[0];
+            return new HBEvents[0];
         }
         return loadedObjects;
     }
 
-    //Hay una mejor forma de desorganizar la lista de randomsE?
+    // :D
     private void Shuffle<T>(List<T> list)
     {
         for (int i = list.Count - 1; i > 0; i--)
@@ -104,4 +105,13 @@ public class EventManager : MonoBehaviour
             list[j] = tmp;
         }
     }
+}
+
+
+[System.Serializable]
+public class EventLists{
+
+    public HBEvents[] mainEvents;
+    public HBEvents[] randomEvents;
+    public int randomEventAmount;
 }
