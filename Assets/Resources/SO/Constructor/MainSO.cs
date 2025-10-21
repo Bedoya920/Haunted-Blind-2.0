@@ -11,7 +11,7 @@ public class MainSO : ScriptableObject
 {
     public string id;
     public string eventName;
-    EventType type = EventType.Main;
+    public EventType type = EventType.Main;
     public string audioTxt;
     public float duration;
     public int indexStep;
