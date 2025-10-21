@@ -5,7 +5,7 @@ public class RandomSO : ScriptableObject
 {
     public string id;
     public string eventName;
-    EventType type = EventType.Random;
+    public EventType type = EventType.Random;
     public string audioTxt;
     public float duration;
 

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b677ea34a4be03498cdf7961ba4cc69, type: 3}
+  m_Name: AIPromptTemplates
+  m_EditorClassIdentifier: 
+  systemPrompt: "Eres un asistente de voz para un juego de supervivencia para personas
+    ciegas. Responde en espa\xF1ol de manera clara y \xFAtil."
+  locationDescriptionTemplate: "Est\xE1s en {location}. {description}"
+  actionFeedbackTemplate: '{actionDescription}. {result}'
+  helpTemplate: "Puedes usar estos comandos: {commands}. Tambi\xE9n puedes preguntarme
+    sobre tu entorno o pedirme ayuda."
+  errorTemplate: "No puedo hacer eso ahora. {reason}. \xBFQu\xE9 m\xE1s te gustar\xEDa
+    intentar?"
+  contextualResponses: []
