@@ -12,6 +12,7 @@ public class EventManager : MonoBehaviour
     public ScriptableObject[] MainEvents => mainEvents;
     public ScriptableObject[] RandomEvents => randomEvents;
 
+    //Testing stuff
     void Awake()
     {
         FillMainEventList();
@@ -19,6 +20,7 @@ public class EventManager : MonoBehaviour
 
     }
 
+    //Testing stuff
     void Update()
     {
         if(Input.GetKeyDown(KeyCode.W))
@@ -29,7 +31,7 @@ public class EventManager : MonoBehaviour
         }
     }
 
-    public void FillMainEventList()
+    private void FillMainEventList()
     {
         mainEvents = LoadAllSO("SO/SO_Main");
 
@@ -39,7 +41,7 @@ public class EventManager : MonoBehaviour
         }
     }
 
-    public void FillRandomEventList(int randomAmount)
+    private void FillRandomEventList(int randomAmount)
     {
         if (randomAmount <= 0)
         {
@@ -60,6 +62,7 @@ public class EventManager : MonoBehaviour
         randomEvents = list.GetRange(0, take).ToArray();
     }
 
+    //Esta seria la que se llama desde cualquier script
     public string RequestRandomEvent(int index)
     {
         if (randomEvents == null || randomEvents.Length == 0)
@@ -78,7 +81,6 @@ public class EventManager : MonoBehaviour
         return randomEvents[index].name;
     }
 
-
     private ScriptableObject[] LoadAllSO(string folder)
     {
         ScriptableObject[] loadedObjects = Resources.LoadAll<ScriptableObject>(folder);
@@ -91,6 +93,7 @@ public class EventManager : MonoBehaviour
         return loadedObjects;
     }
 
+    //Hay una mejor forma de desorganizar la lista de randomsE?
     private void Shuffle<T>(List<T> list)
     {
         for (int i = list.Count - 1; i > 0; i--)
