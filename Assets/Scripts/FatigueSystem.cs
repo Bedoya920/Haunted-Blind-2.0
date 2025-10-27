@@ -4,15 +4,15 @@ public class FatigueSystem : MonoBehaviour
 {
     [Header("Referencias")]
     [SerializeField] private PlayerLivesData playerLives;
-    [SerializeField] private GameTimer gameTimer; 
-    [SerializeField] private ConsumibleData consumible;
+    [SerializeField] private GameTimer gameTimer;
+    [SerializeField] private ConsumiblesManager consumiblesManager;
 
     [Header("Configuración de Fatiga")]
     [Tooltip("Cuánta fatiga se necesita para perder una vida.")]
     [SerializeField] private int fatigaPorVida = 5;
 
     private int nivelFatigaActual = 0;
-    private float tiempoUltimoLog = 0f; // Para controlar cuándo se imprime el tiempo
+    private float tiempoUltimoLog = 0f;
 
     private void Start()
     {
@@ -75,11 +75,20 @@ public class FatigueSystem : MonoBehaviour
                     return;
                 }
 
-                if (consumible == null)
+                if (consumiblesManager == null)
                 {
-                    Debug.Log("No hay consumible asignado en el inspector.");
+                    Debug.Log("No hay ConsumiblesManager asignado en el inspector.");
                     return;
                 }
+
+                int cantidadActual = consumiblesManager.GetCantidadConsumibles();
+                if (cantidadActual <= 0)
+                {
+                    Debug.Log("No tienes consumibles disponibles.");
+                    return;
+                }
+
+                ConsumibleData consumible = consumiblesManager.GetConsumibleData();
 
                 if (playerLives.currentLives >= playerLives.totalLives)
                 {
@@ -90,7 +99,11 @@ public class FatigueSystem : MonoBehaviour
                 int vidasARecuperar = Mathf.Min(consumible.vidasQueDevuelve, playerLives.totalLives - playerLives.currentLives);
                 playerLives.currentLives += vidasARecuperar;
 
-                Debug.Log($"Has usado {consumible.nombreConsumible}. Recuperas {vidasARecuperar} vida(s). Total: {playerLives.currentLives}");
+                // Restar el consumible del inventario
+                consumiblesManager.RestarConsumible(1);
+
+                Debug.Log($"Has usado {consumible.nombreConsumible}. Recuperas {vidasARecuperar} vida(s). " +
+                          $"Vidas totales: {playerLives.currentLives}. Consumibles restantes: {consumiblesManager.GetCantidadConsumibles()}");
             }
         }
         else
@@ -108,6 +121,7 @@ public class FatigueSystem : MonoBehaviour
         Debug.Log("El sistema de fatiga detecta que el tiempo terminó.");
     }
 }
+
 
 
 
