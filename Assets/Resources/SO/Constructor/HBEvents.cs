@@ -6,15 +6,16 @@ public enum EventType
     Random
 }
 
-[CreateAssetMenu(fileName = "MainSO", menuName = "EventosEspeciales/MainEvent")]
-public class MainSO : ScriptableObject
+[CreateAssetMenu(fileName = "HBEvents", menuName = "EventosEspeciales/MainEvent")]
+public class HBEvents : ScriptableObject
 {
-    public string id;
+    public int id;
     public string eventName;
-    EventType type = EventType.Main;
+    public EventType type = EventType.Main;
     public string audioTxt;
     public float duration;
-    public int indexStep;
+
+    //public int indexStep; No necesario
     
     //Cómo deberia marcar en que habitación se va a aplicar este evento?
     //string idRoom; (?)
