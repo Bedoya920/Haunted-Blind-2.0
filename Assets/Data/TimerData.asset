@@ -9,11 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f146202b9ee83c5499a013495299baf4, type: 3}
-  m_Name: MainSO
+  m_Script: {fileID: 11500000, guid: 84c9bf8d71da1c44f9708e2f580769b1, type: 3}
+  m_Name: TimerData
   m_EditorClassIdentifier: 
-  id: M1
-  eventName: 
-  audioTxt: 
-  duration: 0
-  indexStep: 0
+  totalDuration: 20
+  interval: 5
+  currentTime: 292.5851
+  isRunning: 1

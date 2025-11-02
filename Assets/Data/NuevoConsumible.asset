@@ -9,10 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a3439300b436d0c4fafc41a113d1ac75, type: 3}
-  m_Name: 1
+  m_Script: {fileID: 11500000, guid: 99c6334503de8964b94feaf30875bfe9, type: 3}
+  m_Name: NuevoConsumible
   m_EditorClassIdentifier: 
-  id: 
-  eventName: 
-  audioTxt: 
-  duration: 0
+  nombreConsumible: "Poci\xF3n misteriosa"
+  vidasQueDevuelve: 1
