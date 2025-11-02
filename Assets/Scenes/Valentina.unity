@@ -129,7 +129,8 @@ GameObject:
   m_Component:
   - component: {fileID: 738091815}
   - component: {fileID: 738091814}
-  - component: {fileID: 738091813}
+  - component: {fileID: 738091817}
+  - component: {fileID: 738091816}
   m_Layer: 0
   m_Name: Dios
   m_TagString: Untagged
@@ -137,22 +138,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &738091813
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 738091812}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 77387270e78e44a48bc311330420ea96, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerLives: {fileID: 11400000, guid: a383ba76c5221f145a562bab4b4c3fd0, type: 2}
-  gameTimer: {fileID: 738091814}
-  consumible: {fileID: 11400000, guid: 1ff2ac2e8841f6b44ad5a9e4252951fa, type: 2}
-  fatigaPorVida: 5
 --- !u!114 &738091814
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -181,6 +166,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &738091816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 738091812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77387270e78e44a48bc311330420ea96, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerLives: {fileID: 11400000, guid: a383ba76c5221f145a562bab4b4c3fd0, type: 2}
+  gameTimer: {fileID: 738091814}
+  consumiblesManager: {fileID: 738091817}
+  fatigaPorVida: 5
+--- !u!114 &738091817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 738091812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f89452d3e5b82be44aeac42a60c09c57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  consumibleData: {fileID: 11400000, guid: 1ff2ac2e8841f6b44ad5a9e4252951fa, type: 2}
 --- !u!1 &2076344571
 GameObject:
   m_ObjectHideFlags: 0
