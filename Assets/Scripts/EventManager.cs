@@ -119,4 +119,5 @@ public class EventLists
     public HBEvents[] mainEvents;
     public HBEvents[] randomEvents;
     public int randomEventAmount;
+
 }
