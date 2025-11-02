@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f03080658bdc65d41a198463ebfda9f5, type: 3}
   m_Name: PlayerLivesData
   m_EditorClassIdentifier: 
-  totalLives: 1
-  currentLives: 0
+  totalLives: 5
+  currentLives: 4
