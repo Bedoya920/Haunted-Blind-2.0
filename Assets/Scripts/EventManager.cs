@@ -1,63 +1,86 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class EventManager : MonoBehaviour
 {
-    [SerializeField]private ScriptableObject[] mainEvents;
-    [SerializeField]private ScriptableObject[] randomEvents;
+    public EventLists eventos;
 
-    public int randomEventAmount;
+    [Header("Archivo JSON en Resources (sin extensión)")]
+    public string jsonFileName = "events_data";
 
-    public ScriptableObject[] MainEvents => mainEvents;
-    public ScriptableObject[] RandomEvents => randomEvents;
+    // Estas listas se llenarán directamente desde el JSON
+    private HBEvents[] mainEvents;
+    private HBEvents[] randomEvents;
 
     void Awake()
     {
+        CargarDesdeJSON();
         FillMainEventList();
-        FillRandomEventList(randomEventAmount);
-
+        FillRandomEventList(eventos.randomEventAmount);
     }
 
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.W))
+        if (Input.GetKeyDown(KeyCode.W))
         {
-            int a = Random.Range(0, randomEventAmount);
+            int a = Random.Range(0, randomEvents.Length);
             print(RequestRandomEvent(a));
-
         }
     }
 
-    public void FillMainEventList()
+    private void CargarDesdeJSON()
     {
-        mainEvents = LoadAllSO("SO/SO_Main");
-
-        if (mainEvents == null || mainEvents.Length == 0)
+        TextAsset jsonFile = Resources.Load<TextAsset>(jsonFileName);
+        if (jsonFile == null)
         {
-            print("No hay SO en Assets/Resources/SO/SO_Main");
+            Debug.LogError($"No se encontró el archivo JSON en Resources/{jsonFileName}.json");
+            return;
         }
+
+        eventos = JsonUtility.FromJson<EventLists>(jsonFile.text);
+
+        if (eventos == null)
+            Debug.LogError("Error al deserializar el archivo JSON.");
+        else
+            Debug.Log("Eventos cargados correctamente desde JSON.");
     }
 
-    public void FillRandomEventList(int randomAmount)
+    private void FillMainEventList()
     {
-        if (randomAmount <= 0)
+        if (eventos == null || eventos.mainEvents == null || eventos.mainEvents.Length == 0)
         {
-            print("El número no puede ser 0 o negativo");
+            Debug.LogWarning("No hay eventos principales en el JSON.");
+            mainEvents = new HBEvents[0];
+            return;
         }
 
-        var allRandom = LoadAllSO("SO/SO_Random");
+        mainEvents = new HBEvents[eventos.mainEvents.Length];
 
-        if (allRandom == null || allRandom.Length == 0)
+        for (int i = 0; i < eventos.mainEvents.Length; i++)
         {
-            print("la carpeta Assets/SO/SO_Random está vacia");
+            mainEvents[i] = eventos.mainEvents[i];
         }
 
-        var list = new List<ScriptableObject>(allRandom);
-        Shuffle(list);
+        Debug.Log($"Se llenaron {mainEvents.Length} eventos principales desde el JSON.");
+    }
+
+    private void FillRandomEventList(int randomAmount)
+    {
+        if (eventos == null || eventos.randomEvents == null || eventos.randomEvents.Length == 0)
+        {
+            Debug.LogWarning("No hay eventos aleatorios en el JSON.");
+            randomEvents = new HBEvents[0];
+            return;
+        }
+
+        List<HBEvents> list = new List<HBEvents>(eventos.randomEvents);
+
+        Shuffle(list); 
 
         int take = Mathf.Clamp(randomAmount, 0, list.Count);
         randomEvents = list.GetRange(0, take).ToArray();
+
+        Debug.Log($"Se llenaron {randomEvents.Length} eventos aleatorios desde el JSON.");
     }
 
     public string RequestRandomEvent(int index)
@@ -70,27 +93,14 @@ public class EventManager : MonoBehaviour
 
         if (index < 0 || index >= randomEvents.Length)
         {
-            Debug.LogWarning("Index fuera de rango mano");
+            Debug.LogWarning("Index fuera de rango");
             return null;
         }
 
-        //Necesario borra ese evento?
-        return randomEvents[index].name;
+        return randomEvents[index].eventName;
     }
 
-
-    private ScriptableObject[] LoadAllSO(string folder)
-    {
-        ScriptableObject[] loadedObjects = Resources.LoadAll<ScriptableObject>(folder);
-        
-        if (loadedObjects == null || loadedObjects.Length == 0)
-        {
-            print($"No se encontraron ScriptableObjects en Resources/{folder}");
-            return new ScriptableObject[0];
-        }
-        return loadedObjects;
-    }
-
+    // Barajar lista
     private void Shuffle<T>(List<T> list)
     {
         for (int i = list.Count - 1; i > 0; i--)
@@ -101,4 +111,12 @@ public class EventManager : MonoBehaviour
             list[j] = tmp;
         }
     }
+}
+
+[System.Serializable]
+public class EventLists
+{
+    public HBEvents[] mainEvents;
+    public HBEvents[] randomEvents;
+    public int randomEventAmount;
 }
