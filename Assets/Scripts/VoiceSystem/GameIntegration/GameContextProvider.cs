@@ -357,6 +357,14 @@ namespace VoiceSystem.GameIntegration
             // Consume actions
             currentContext.ConsumeActions();
             
+            // Sincronizar con FatigueSystem (cada acción = +1 fatiga)
+            var fatigueSystem = FatigueSystem.Instance;
+            if (fatigueSystem != null)
+            {
+                fatigueSystem.AddFatigue(1);
+                SyncWithFatigueSystem();
+            }
+            
             // Add event
             currentContext.AddEvent($"Ejecutaste: {commandId}");
             
@@ -451,6 +459,16 @@ namespace VoiceSystem.GameIntegration
         
         private void ConsumeFirstConsumable()
         {
+            // Intentar sistema de FatigueSystem primero (más completo y sincronizado)
+            var fatigueSystem = FatigueSystem.Instance;
+            if (fatigueSystem != null && fatigueSystem.TryUseConsumableFromInventory())
+            {
+                // FatigueSystem manejó el consumo - sincronizar de vuelta
+                SyncWithFatigueSystem();
+                return;
+            }
+            
+            // Fallback: sistema local
             var inventoryManager = RoomInventoryManager.Instance;
             
             if (inventoryManager != null)
@@ -481,6 +499,20 @@ namespace VoiceSystem.GameIntegration
             }
             
             currentContext.AddEvent("No tienes comida para comer");
+        }
+        
+        /// <summary>
+        /// Sincroniza estado desde FatigueSystem (vida/fatiga)
+        /// </summary>
+        private void SyncWithFatigueSystem()
+        {
+            var fatigueSystem = FatigueSystem.Instance;
+            if (fatigueSystem != null && fatigueSystem.PlayerLives != null)
+            {
+                currentContext.health = fatigueSystem.PlayerLives.currentLives;
+                currentContext.maxHealth = fatigueSystem.PlayerLives.totalLives;
+                currentContext.fatigue = fatigueSystem.NivelFatiga;
+            }
         }
         
         private void InspectLocation()

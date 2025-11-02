@@ -2,6 +2,22 @@ using UnityEngine;
 
 public class FatigueSystem : MonoBehaviour
 {
+    // Singleton
+    private static FatigueSystem _instance;
+    public static FatigueSystem Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                var go = new GameObject("FatigueSystem");
+                _instance = go.AddComponent<FatigueSystem>();
+                DontDestroyOnLoad(go);
+            }
+            return _instance;
+        }
+    }
+    
     [Header("Referencias")]
     [SerializeField] private PlayerLivesData playerLives;
     [SerializeField] private GameTimer gameTimer;
@@ -13,20 +29,43 @@ public class FatigueSystem : MonoBehaviour
 
     private int nivelFatigaActual = 0;
     private float tiempoUltimoLog = 0f;
+    
+    // Propiedades públicas para acceso externo
+    public int NivelFatiga => nivelFatigaActual;
+    public int FatigaPorVida => fatigaPorVida;
+    public PlayerLivesData PlayerLives => playerLives;
+
+    void Awake()
+    {
+        // Singleton pattern
+        if (_instance == null)
+        {
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (_instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+    }
 
     private void Start()
     {
         if (playerLives != null) playerLives.ResetLives();
 
+        // Obtener GameTimer como singleton
         if (gameTimer == null)
         {
-            Debug.LogError("Falta asignar el GameTimer en el inspector.");
-            return;
+            gameTimer = GameTimer.Instance;
         }
 
-        gameTimer.OnTimerEnd += AlTerminarElTiempo;
+        if (gameTimer != null)
+        {
+            gameTimer.OnTimerEnd += AlTerminarElTiempo;
+        }
 
-        Debug.Log($"[INICIO] Vidas: {playerLives.currentLives}, Tiempo total: {gameTimer.GetTotalTime()} segundos.");
+        Debug.Log($"[FatigueSystem] Singleton inicializado - Vidas: {playerLives?.currentLives ?? 0}, Tiempo: {gameTimer?.GetTotalTime() ?? 0}s");
     }
 
     private void Update()
@@ -118,12 +157,100 @@ public class FatigueSystem : MonoBehaviour
 
     private void AlTerminarElTiempo()
     {
-        Debug.Log("El sistema de fatiga detecta que el tiempo terminó.");
+        Debug.Log("[FatigueSystem] El tiempo terminó.");
     }
+    
+    #region Public API
+    
+    /// <summary>
+    /// Aumentar fatiga (API pública para sistema de acciones)
+    /// </summary>
+    public void AddFatigue(int amount = 1)
+    {
+        if (playerLives == null || playerLives.currentLives <= 0)
+        {
+            return;
+        }
+        
+        nivelFatigaActual += amount;
+        
+        if (nivelFatigaActual >= fatigaPorVida)
+        {
+            nivelFatigaActual = 0;
+            playerLives.LoseLife();
+            
+            if (playerLives.currentLives > 0)
+            {
+                Debug.Log($"[FatigueSystem] Fatiga acumulada. Vida perdida. Vidas: {playerLives.currentLives}");
+            }
+            else
+            {
+                Debug.Log("[FatigueSystem] Has perdido todas tus vidas. Fin del juego.");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Usar consumible desde RoomInventoryManager (integración con sistema de voz)
+    /// </summary>
+    public bool TryUseConsumableFromInventory()
+    {
+        if (playerLives == null || playerLives.currentLives >= playerLives.totalLives)
+        {
+            return false;
+        }
+        
+        // Intentar sistema rico de RoomInventoryManager primero
+        var inventoryManager = VoiceSystem.GameIntegration.RoomInventoryManager.Instance;
+        if (inventoryManager != null)
+        {
+            var contextProvider = FindObjectOfType<VoiceSystem.GameIntegration.GameContextProvider>();
+            if (contextProvider != null)
+            {
+                var context = contextProvider.GetCurrentContext();
+                
+                // Buscar primer consumible en inventario
+                foreach (string itemId in context.inventory)
+                {
+                    var item = inventoryManager.FindItemInAllRooms(itemId);
+                    if (item != null && item.IsConsumable())
+                    {
+                        // Consumir
+                        context.inventory.Remove(itemId);
+                        playerLives.currentLives = Mathf.Min(
+                            playerLives.totalLives, 
+                            playerLives.currentLives + item.healthRestore
+                        );
+                        
+                        nivelFatigaActual = Mathf.Max(0, nivelFatigaActual - item.fatigueReduction);
+                        
+                        Debug.Log($"[FatigueSystem] Consumible usado: {item.itemName} (+{item.healthRestore} vida, -{item.fatigueReduction} fatiga)");
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        // Fallback: sistema de Valuv con ConsumiblesManager
+        if (consumiblesManager != null && consumiblesManager.GetCantidadConsumibles() > 0)
+        {
+            var consumible = consumiblesManager.GetConsumibleData();
+            int vidasARecuperar = Mathf.Min(
+                consumible.vidasQueDevuelve, 
+                playerLives.totalLives - playerLives.currentLives
+            );
+            
+            playerLives.currentLives += vidasARecuperar;
+            consumiblesManager.RestarConsumible(1);
+            
+            Debug.Log($"[FatigueSystem] Consumible genérico usado (+{vidasARecuperar} vidas). Restantes: {consumiblesManager.GetCantidadConsumibles()}");
+            return true;
+        }
+        
+        return false;
+    }
+    
+    #endregion
 }
-
-
-
-
 
 

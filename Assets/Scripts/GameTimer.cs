@@ -3,6 +3,22 @@ using System;
 
 public class GameTimer : MonoBehaviour
 {
+    // Singleton
+    private static GameTimer _instance;
+    public static GameTimer Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                var go = new GameObject("GameTimer");
+                _instance = go.AddComponent<GameTimer>();
+                DontDestroyOnLoad(go);
+            }
+            return _instance;
+        }
+    }
+    
     [SerializeField] private TimerData timerSettings;
 
     private float totalTime;
@@ -15,14 +31,37 @@ public class GameTimer : MonoBehaviour
 
     private bool isRunning = false;
 
+    void Awake()
+    {
+        // Singleton pattern
+        if (_instance == null)
+        {
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (_instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+    }
+
     void Start()
     {
+        if (timerSettings == null)
+        {
+            Debug.LogError("[GameTimer] Falta asignar TimerData");
+            return;
+        }
+        
         // Carga valores iniciales desde el ScriptableObject
         totalTime = timerSettings.totalDuration;
         interval = timerSettings.interval;
 
         ResetTimer();
         StartTimer(totalTime, interval);
+        
+        Debug.Log($"[GameTimer] Singleton inicializado - Tiempo total: {totalTime}s");
     }
 
     void Update()
@@ -68,6 +107,19 @@ public class GameTimer : MonoBehaviour
     public float GetTotalTime() => totalTime;
     public float GetInterval() => interval;
     public bool IsRunning() => isRunning;
+    
+    /// <summary>
+    /// Métodos compatibles con GamePauseManager
+    /// El timer usa Time.deltaTime que respeta Time.timeScale automáticamente
+    /// </summary>
+    public void PauseTimerForNarration()
+    {
+        // No hacer nada - Time.deltaTime ya es 0 cuando Time.timeScale = 0
+        // El timer se pausa automáticamente
+    }
+    
+    public void ResumeTimerFromNarration()
+    {
+        // No hacer nada - Time.deltaTime vuelve a normal automáticamente
+    }
 }
-
-

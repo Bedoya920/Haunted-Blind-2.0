@@ -106,6 +106,18 @@ namespace VoiceSystem.Editor
                     Debug.LogWarning("⚠️ GameContextProvider no encontrado - ejecuta 'Setup Windows Voice System' primero");
                 }
                 
+                // 6. Asegurar que existan los Singletons del juego
+                Debug.Log("=== VERIFICANDO SINGLETONS DEL JUEGO ===");
+                
+                var gameTimerSingleton = GameTimer.Instance;
+                var fatigueSystemSingleton = FatigueSystem.Instance;
+                var consumablesManagerSingleton = ConsumiblesManager.Instance;
+                
+                Debug.Log($"✅ GameTimer Singleton: {(gameTimerSingleton != null ? "OK" : "FALLO")}");
+                Debug.Log($"✅ FatigueSystem Singleton: {(fatigueSystemSingleton != null ? "OK" : "FALLO")}");
+                Debug.Log($"✅ ConsumiblesManager Singleton: {(consumablesManagerSingleton != null ? "OK" : "FALLO")}");
+                Debug.Log($"✅ RoomInventoryManager Singleton: {(inventoryManager != null ? "OK" : "FALLO")}");
+                
                 Debug.Log("=== INTEGRACIÓN COMPLETADA ===");
                 
                 EditorUtility.DisplayDialog(
@@ -118,6 +130,11 @@ namespace VoiceSystem.Editor
                     "• Habitaciones reales del generador procedural\n" +
                     "• Sistema de items con búsqueda de ocultos\n" +
                     "• Consumibles automáticos\n\n" +
+                    "Singletons optimizados:\n" +
+                    "✅ GameTimer\n" +
+                    "✅ FatigueSystem\n" +
+                    "✅ ConsumiblesManager\n" +
+                    "✅ RoomInventoryManager\n\n" +
                     "IMPORTANTE: Asegúrate de ejecutar el generador (Iniciar) antes de usar el sistema de voz.", 
                     "Perfecto"
                 );

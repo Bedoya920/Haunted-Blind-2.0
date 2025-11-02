@@ -383,27 +383,30 @@ namespace VoiceSystem.GameIntegration
         
         /// <summary>
         /// Sincroniza vida/fatiga/tiempo del jugador al GameContext
+        /// Usa Singletons para acceso optimizado
         /// </summary>
         public void SyncPlayerStateToContext(GameContext context)
         {
             if (context == null) return;
             
-            // Sincronizar vida (desde FatigueSystem)
-            if (fatigueSystem != null)
+            // Sincronizar vida/fatiga (desde FatigueSystem Singleton)
+            var fatigueSys = fatigueSystem ?? FatigueSystem.Instance;
+            if (fatigueSys != null && fatigueSys.PlayerLives != null)
             {
-                // TODO: Acceder a PlayerLivesData desde FatigueSystem
-                // context.health = fatigueSystem.playerLives.currentLives;
-                // context.maxHealth = fatigueSystem.playerLives.totalLives;
+                context.health = fatigueSys.PlayerLives.currentLives;
+                context.maxHealth = fatigueSys.PlayerLives.totalLives;
+                context.fatigue = fatigueSys.NivelFatiga;
             }
             
-            // Sincronizar tiempo (desde GameTimer)
-            if (gameTimer != null)
+            // Sincronizar tiempo (desde GameTimer Singleton)
+            var timer = gameTimer ?? GameTimer.Instance;
+            if (timer != null)
             {
-                float remainingMinutes = gameTimer.GetRemainingTime() / 60f;
+                float remainingMinutes = timer.GetRemainingTime() / 60f;
                 context.timeRemaining = remainingMinutes;
                 
                 // Calcular hora del juego (asumiendo inicio a las 2:00 AM)
-                float elapsedMinutes = (gameTimer.GetTotalTime() - gameTimer.GetRemainingTime()) / 60f;
+                float elapsedMinutes = (timer.GetTotalTime() - timer.GetRemainingTime()) / 60f;
                 int hour = 2 + Mathf.FloorToInt(elapsedMinutes / 60f);
                 int minute = Mathf.FloorToInt(elapsedMinutes % 60f);
                 context.gameTime = $"{hour:D2}:{minute:D2} AM";
