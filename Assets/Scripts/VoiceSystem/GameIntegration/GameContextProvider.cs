@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using VoiceSystem.Core.Interfaces;
 using VoiceSystem.Core.Data;
@@ -11,6 +12,10 @@ namespace VoiceSystem.GameIntegration
     {
         [Header("Demo Configuration")]
         public bool useDemoData = true;
+        
+        [Header("Room System Integration")]
+        [SerializeField] private RoomSystemBridge roomBridge;
+        [SerializeField] private bool useRealRoomGenerator = false; // Toggle demo vs real
         
         [Header("Game References")]
         public EventManager eventManager;
@@ -60,25 +65,33 @@ namespace VoiceSystem.GameIntegration
             currentContext.inventory.Add("comida");
             currentContext.inventory.Add("agua");
             
-            // Setup room system with demo data
-            SetupDemoRooms();
-            
-            // Set current location from currentRoom
-            if (currentContext.currentRoom != null)
+            // Decidir fuente de habitaciones
+            if (useRealRoomGenerator && roomBridge != null)
             {
-                currentContext.currentLocation = currentContext.currentRoom.roomName;
-                
-                // Update nearby objects from room
-                currentContext.nearbyObjects.Clear();
-                if (currentContext.currentRoom.objects != null)
-                {
-                    currentContext.nearbyObjects.AddRange(currentContext.currentRoom.objects);
-                }
+                SetupFromRoomGenerator();
             }
             else
             {
-                currentContext.currentLocation = demoLocations[currentLocationIndex];
-                UpdateNearbyObjects();
+                // Setup room system with demo data
+                SetupDemoRooms();
+                
+                // Set current location from currentRoom
+                if (currentContext.currentRoom != null)
+                {
+                    currentContext.currentLocation = currentContext.currentRoom.roomName;
+                    
+                    // Update nearby objects from room
+                    currentContext.nearbyObjects.Clear();
+                    if (currentContext.currentRoom.objects != null)
+                    {
+                        currentContext.nearbyObjects.AddRange(currentContext.currentRoom.objects);
+                    }
+                }
+                else
+                {
+                    currentContext.currentLocation = demoLocations[currentLocationIndex];
+                    UpdateNearbyObjects();
+                }
             }
             
             // Demo recent events
@@ -87,6 +100,39 @@ namespace VoiceSystem.GameIntegration
             currentContext.AddEvent("El reloj marca las 2 AM");
             
             Debug.Log($"[GameContext] Demo context set up for room: {currentContext.currentRoom?.roomName ?? currentContext.currentLocation}");
+        }
+        
+        private void SetupFromRoomGenerator()
+        {
+            // Obtener habitación actual del generador
+            currentContext.currentRoom = roomBridge.GetCurrentRoom();
+            
+            if (currentContext.currentRoom != null)
+            {
+                currentContext.currentLocation = currentContext.currentRoom.roomName;
+                currentContext.nearbyObjects.Clear();
+                currentContext.nearbyObjects.AddRange(currentContext.currentRoom.objects);
+            }
+            
+            // Sincronizar estado del jugador
+            roomBridge.SyncPlayerStateToContext(currentContext);
+            
+            // Suscribirse a cambios de habitación
+            roomBridge.OnRoomChanged += OnRoomChangedFromGenerator;
+            
+            Debug.Log($"[GameContext] Usando RoomGenerator real: {currentContext.currentRoom?.roomName}");
+        }
+        
+        private void OnRoomChangedFromGenerator(RoomData newRoom)
+        {
+            currentContext.currentRoom = newRoom;
+            currentContext.currentLocation = newRoom.roomName;
+            currentContext.nearbyObjects.Clear();
+            currentContext.nearbyObjects.AddRange(newRoom.objects);
+            
+            currentContext.AddEvent($"Entraste a {newRoom.roomName}");
+            
+            Debug.Log($"[GameContext] Cambio de habitación: {newRoom.roomName}");
         }
         
         private void SetupDemoRooms()
@@ -280,13 +326,33 @@ namespace VoiceSystem.GameIntegration
         
         public void ExecuteCommand(string commandId)
         {
+            Debug.Log($"[GameContext] Executing command: {commandId}");
+            
+            // Si es comando de puerta y estamos usando generador real
+            if (commandId.StartsWith("usar_puerta_") && useRealRoomGenerator && roomBridge != null)
+            {
+                string doorId = commandId.Replace("usar_puerta_", "");
+                
+                if (roomBridge.TryMoveThroughDoor(doorId, out string reason))
+                {
+                    currentContext.ConsumeActions();
+                    currentContext.AddEvent("Atravesaste la puerta");
+                    // roomBridge.OnRoomChanged se dispara automáticamente
+                }
+                else
+                {
+                    currentContext.AddEvent($"No puedes usar esa puerta: {reason}");
+                }
+                
+                return;
+            }
+            
+            // Validación para comandos normales
             if (!IsCommandValid(commandId))
             {
                 Debug.LogWarning($"[GameContext] Invalid command: {commandId}");
                 return;
             }
-            
-            Debug.Log($"[GameContext] Executing command: {commandId}");
             
             // Consume actions
             currentContext.ConsumeActions();
@@ -327,6 +393,17 @@ namespace VoiceSystem.GameIntegration
                 case "despertar":
                     AttemptAwakening();
                     break;
+                case "buscar":
+                    SearchCurrentRoom();
+                    break;
+            }
+            
+            // Procesar comandos de "tomar [item]"
+            if (commandId.StartsWith("tomar_"))
+            {
+                string itemName = commandId.Substring(6); // Remover "tomar_"
+                TakeItemFromRoom(itemName);
+                return;
             }
             
             // Update time
@@ -351,16 +428,59 @@ namespace VoiceSystem.GameIntegration
         
         private void EatFood()
         {
-            if (currentContext.inventory.Contains("comida"))
+            // Intentar sistema nuevo de items
+            if (useRealRoomGenerator)
             {
-                currentContext.inventory.Remove("comida");
-                currentContext.RestoreHealth(1);
-                currentContext.AddEvent("Comiste comida y recuperaste 1 de vida");
+                ConsumeFirstConsumable();
             }
             else
             {
-                currentContext.AddEvent("No tienes comida para comer");
+                // Modo demo legacy
+                if (currentContext.inventory.Contains("comida"))
+                {
+                    currentContext.inventory.Remove("comida");
+                    currentContext.RestoreHealth(1);
+                    currentContext.AddEvent("Comiste comida y recuperaste 1 de vida");
+                }
+                else
+                {
+                    currentContext.AddEvent("No tienes comida para comer");
+                }
             }
+        }
+        
+        private void ConsumeFirstConsumable()
+        {
+            var inventoryManager = RoomInventoryManager.Instance;
+            
+            if (inventoryManager != null)
+            {
+                // Buscar en inventario del jugador items de tipo Consumable
+                foreach (string itemId in currentContext.inventory)
+                {
+                    // Buscar el item en TODAS las habitaciones para obtener su data
+                    RoomItem consumable = inventoryManager.FindItemInAllRooms(itemId);
+                    
+                    if (consumable != null && consumable.IsConsumable())
+                    {
+                        // Consumir
+                        currentContext.inventory.Remove(itemId);
+                        currentContext.RestoreHealth(consumable.healthRestore);
+                        currentContext.fatigue = Mathf.Max(0, currentContext.fatigue - consumable.fatigueReduction);
+                        
+                        string message = !string.IsNullOrEmpty(consumable.useMessage)
+                            ? consumable.useMessage
+                            : $"Comiste {consumable.itemName} y recuperaste {consumable.healthRestore} de vida";
+                        
+                        currentContext.AddEvent(message);
+                        
+                        Debug.Log($"[GameContext] Consumible usado: {consumable.itemName} (+{consumable.healthRestore} vida, -{consumable.fatigueReduction} fatiga)");
+                        return;
+                    }
+                }
+            }
+            
+            currentContext.AddEvent("No tienes comida para comer");
         }
         
         private void InspectLocation()
@@ -451,6 +571,97 @@ namespace VoiceSystem.GameIntegration
             currentContext.AddEvent("Intentas despertar, pero algo te mantiene atrapado en este lugar");
         }
         
+        #region Item Actions
+        
+        private void SearchCurrentRoom()
+        {
+            if (useRealRoomGenerator && roomBridge != null)
+            {
+                var inventoryManager = RoomInventoryManager.Instance;
+                if (inventoryManager != null)
+                {
+                    var foundItems = inventoryManager.SearchRoom(currentContext.currentRoom.roomId);
+                    
+                    if (foundItems.Count > 0)
+                    {
+                        string itemNames = string.Join(", ", foundItems.ConvertAll(i => i.itemName));
+                        currentContext.AddEvent($"Buscaste y encontraste: {itemNames}");
+                        
+                        // Actualizar objetos visibles en currentRoom
+                        foreach (var item in foundItems)
+                        {
+                            if (!currentContext.currentRoom.objects.Contains(item.itemName))
+                            {
+                                currentContext.currentRoom.objects.Add(item.itemName);
+                            }
+                        }
+                        
+                        // Limpiar cache del bridge para que recargue los objetos
+                        if (roomBridge != null)
+                        {
+                            roomBridge.ClearCache();
+                        }
+                    }
+                    else
+                    {
+                        currentContext.AddEvent("Buscaste cuidadosamente pero no encontraste nada oculto");
+                    }
+                }
+            }
+            else
+            {
+                // Modo demo simple
+                currentContext.AddEvent("Buscaste en la habitación");
+            }
+        }
+        
+        private void TakeItemFromRoom(string itemName)
+        {
+            if (useRealRoomGenerator && roomBridge != null)
+            {
+                var inventoryManager = RoomInventoryManager.Instance;
+                if (inventoryManager != null)
+                {
+                    // Buscar item por nombre en la habitación actual
+                    var roomInventory = inventoryManager.GetRoomInventory(currentContext.currentRoom.roomId);
+                    var item = roomInventory.items.Find(i => 
+                        i.itemName.ToLower().Contains(itemName.ToLower()) && i.CanBeCollected()
+                    );
+                    
+                    if (item != null)
+                    {
+                        if (inventoryManager.TryTakeItem(currentContext.currentRoom.roomId, item.itemId, out RoomItem takenItem))
+                        {
+                            // Agregar al inventario del jugador
+                            currentContext.inventory.Add(takenItem.itemId);
+                            currentContext.AddEvent($"Tomaste: {takenItem.itemName}");
+                            
+                            // Remover de objetos visibles
+                            currentContext.currentRoom.objects.Remove(takenItem.itemName);
+                            currentContext.nearbyObjects.Remove(takenItem.itemName);
+                            
+                            // Limpiar cache del bridge
+                            if (roomBridge != null)
+                            {
+                                roomBridge.ClearCache();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        currentContext.AddEvent($"No puedes tomar {itemName}. Quizás necesitas buscarlo primero.");
+                    }
+                }
+            }
+            else
+            {
+                // Lógica demo existente
+                TakeObject();
+            }
+        }
+        
+        #endregion
+        
         private void UpdateGameTime()
         {
             // Simulate time passing
@@ -489,6 +700,15 @@ namespace VoiceSystem.GameIntegration
         {
             currentContext.health = Mathf.Max(0, currentContext.health - 1);
             Debug.Log($"[GameContext] Health reduced to {currentContext.health}");
+        }
+        
+        private void OnDestroy()
+        {
+            // Unsubscribe from room bridge events
+            if (roomBridge != null)
+            {
+                roomBridge.OnRoomChanged -= OnRoomChangedFromGenerator;
+            }
         }
     }
 }

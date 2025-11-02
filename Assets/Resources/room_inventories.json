@@ -1,0 +1,120 @@
+{
+    "roomInventories": [
+        {
+            "roomId": "room_sala",
+            "availableActions": ["inspeccionar", "tomar", "buscar"],
+            "items": [
+                {
+                    "itemId": "item_cuadro",
+                    "itemName": "Cuadro Familiar",
+                    "itemType": 4,
+                    "isVisible": true,
+                    "isCollected": false,
+                    "shortDescription": "Un retrato familiar antiguo",
+                    "longDescription": "Un retrato de una familia que vivió aquí hace décadas. Sus ojos parecen seguirte mientras te mueves por la habitación.",
+                    "healthRestore": 0,
+                    "fatigueReduction": 0,
+                    "useMessage": "",
+                    "failMessage": ""
+                },
+                {
+                    "itemId": "key_biblioteca",
+                    "itemName": "Llave de la Biblioteca",
+                    "itemType": 0,
+                    "isVisible": false,
+                    "isCollected": false,
+                    "shortDescription": "Una llave dorada escondida",
+                    "longDescription": "Una llave antigua con forma de libro grabado en oro. Debe abrir la biblioteca. Estaba escondida detrás del piano.",
+                    "healthRestore": 0,
+                    "fatigueReduction": 0,
+                    "useMessage": "Usaste la llave para abrir la puerta de la biblioteca",
+                    "failMessage": ""
+                }
+            ]
+        },
+        {
+            "roomId": "room_comedor",
+            "availableActions": ["inspeccionar", "tomar", "buscar"],
+            "items": [
+                {
+                    "itemId": "food_apple",
+                    "itemName": "Manzana",
+                    "itemType": 1,
+                    "isVisible": true,
+                    "isCollected": false,
+                    "shortDescription": "Una manzana marchita sobre la mesa",
+                    "longDescription": "Una manzana que parece haber estado aquí por años, pero aún es comestible. Huele extrañamente fresca.",
+                    "healthRestore": 1,
+                    "fatigueReduction": 1,
+                    "useMessage": "Comiste la manzana y recuperaste vida",
+                    "failMessage": ""
+                }
+            ]
+        },
+        {
+            "roomId": "room_biblioteca",
+            "availableActions": ["inspeccionar", "tomar", "leer", "buscar"],
+            "items": [
+                {
+                    "itemId": "key_sotano",
+                    "itemName": "Llave del Sótano",
+                    "itemType": 0,
+                    "isVisible": true,
+                    "isCollected": false,
+                    "shortDescription": "Una llave oxidada sobre la mesa",
+                    "longDescription": "Una llave pesada y oxidada que huele a humedad. Tiene grabados extraños que no logras descifrar.",
+                    "healthRestore": 0,
+                    "fatigueReduction": 0,
+                    "useMessage": "Usaste la llave para abrir la puerta del sótano",
+                    "failMessage": ""
+                },
+                {
+                    "itemId": "food_bread",
+                    "itemName": "Pan",
+                    "itemType": 1,
+                    "isVisible": false,
+                    "isCollected": false,
+                    "shortDescription": "Pan duro pero comestible",
+                    "longDescription": "Un trozo de pan duro encontrado entre los libros. Parece seguro comerlo a pesar de su edad.",
+                    "healthRestore": 1,
+                    "fatigueReduction": 2,
+                    "useMessage": "Comiste el pan y te sientes mejor",
+                    "failMessage": ""
+                },
+                {
+                    "itemId": "readable_diary",
+                    "itemName": "Diario",
+                    "itemType": 3,
+                    "isVisible": false,
+                    "isCollected": false,
+                    "shortDescription": "Un diario viejo y polvoriento",
+                    "longDescription": "El diario de la familia que vivió aquí. Las últimas entradas hablan de extraños sucesos: susurros en la noche, sombras que se mueven solas...",
+                    "healthRestore": 0,
+                    "fatigueReduction": 0,
+                    "useMessage": "",
+                    "failMessage": ""
+                }
+            ]
+        },
+        {
+            "roomId": "room_cocina",
+            "availableActions": ["inspeccionar", "tomar", "buscar"],
+            "items": [
+                {
+                    "itemId": "food_water",
+                    "itemName": "Agua",
+                    "itemType": 1,
+                    "isVisible": true,
+                    "isCollected": false,
+                    "shortDescription": "Una botella de agua",
+                    "longDescription": "Agua embotellada que parece estar en buen estado. El sello no ha sido roto.",
+                    "healthRestore": 0,
+                    "fatigueReduction": 3,
+                    "useMessage": "Bebiste agua y reduciste tu fatiga",
+                    "failMessage": ""
+                }
+            ]
+        }
+    ]
+}
+

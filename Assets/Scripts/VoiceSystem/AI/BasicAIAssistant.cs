@@ -118,6 +118,9 @@ namespace VoiceSystem.AI
                 {"leer", "Lees algo. [CMD:leer]"},
                 {"dar", "Das algo. [CMD:dar]"},
                 
+                // Item actions
+                {"buscar", "Buscas cuidadosamente en la habitación. [CMD:buscar]"},
+                
                 // System commands
                 {"renacer", "Intentas renacer. [CMD:renacer]"},
                 {"despertar", "Intentas despertar. [CMD:despertar]"},
@@ -307,7 +310,14 @@ namespace VoiceSystem.AI
         
         private string GenerateDefaultResponse(string userInput, GameContext context)
         {
-            // Check for door-specific queries first
+            // Check for item-specific commands first
+            string itemResponse = TryProcessItemCommand(userInput, context);
+            if (!string.IsNullOrEmpty(itemResponse))
+            {
+                return itemResponse;
+            }
+            
+            // Check for door-specific queries
             string doorResponse = TryProcessDoorQuery(userInput, context);
             if (!string.IsNullOrEmpty(doorResponse))
             {
@@ -327,7 +337,7 @@ namespace VoiceSystem.AI
             }
             
             // Default response
-            return "No estoy seguro de lo que quieres hacer. Puedes preguntarme por ayuda o usar comandos como 'inspeccionar', 'adelante', 'atrás', 'información', 'qué puertas hay', etc.";
+            return "No estoy seguro de lo que quieres hacer. Puedes preguntarme por ayuda o usar comandos como 'inspeccionar', 'adelante', 'atrás', 'información', 'qué puertas hay', 'buscar', etc.";
         }
         
         /// <summary>
@@ -378,7 +388,8 @@ namespace VoiceSystem.AI
                     {
                         if (context.CanUseDoor(door, out string reason))
                         {
-                            return $"Abres {door.doorName} y avanzas hacia {door.leadsToRoomId}. [CMD:usar_puerta_{door.doorId}]";
+                            // CAMBIO: Usar doorId real en lugar de genérico
+                            return $"Abres {door.doorName} y avanzas. [CMD:usar_puerta_{door.doorId}]";
                         }
                         else
                         {
@@ -428,6 +439,90 @@ namespace VoiceSystem.AI
             );
             
             return string.Join(", ", doorDescriptions);
+        }
+        
+        /// <summary>
+        /// Try to process item-specific commands
+        /// </summary>
+        private string TryProcessItemCommand(string userInput, GameContext context)
+        {
+            string lowerInput = userInput.ToLower().Trim();
+            
+            // "tomar [item]"
+            if (lowerInput.StartsWith("tomar "))
+            {
+                string itemName = lowerInput.Substring(6).Trim();
+                
+                // Verificar si el item está en la habitación
+                if (context.currentRoom != null && context.currentRoom.objects != null)
+                {
+                    bool found = context.currentRoom.objects.Any(o => o.ToLower().Contains(itemName));
+                    
+                    if (found)
+                    {
+                        return $"Tomas {itemName}. [CMD:tomar_{itemName}]";
+                    }
+                    else
+                    {
+                        var objectsList = context.currentRoom.objects.Count > 0
+                            ? string.Join(", ", context.currentRoom.objects)
+                            : "nada visible";
+                        return $"No ves ningún {itemName} aquí. Los objetos disponibles son: {objectsList}. Intenta 'buscar' si crees que hay algo oculto.";
+                    }
+                }
+            }
+            
+            // "inspeccionar [item]" - solo si no es habitación general
+            if (lowerInput.StartsWith("inspeccionar ") && !lowerInput.Contains("puerta"))
+            {
+                string itemName = lowerInput.Substring(13).Trim();
+                
+                // Evitar conflicto con "inspeccionar" general
+                if (!string.IsNullOrEmpty(itemName))
+                {
+                    return GetItemDescription(itemName, context);
+                }
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// Obtiene descripción detallada de un item
+        /// </summary>
+        private string GetItemDescription(string itemName, GameContext context)
+        {
+            // Buscar en RoomInventoryManager
+            var inventoryManager = GameIntegration.RoomInventoryManager.Instance;
+            if (inventoryManager != null && context.currentRoom != null)
+            {
+                var roomInventory = inventoryManager.GetRoomInventory(context.currentRoom.roomId);
+                var item = roomInventory.items.Find(i => 
+                    i.itemName.ToLower().Contains(itemName.ToLower()) && i.isVisible
+                );
+                
+                if (item != null)
+                {
+                    return !string.IsNullOrEmpty(item.longDescription)
+                        ? item.longDescription
+                        : item.shortDescription;
+                }
+            }
+            
+            return $"No encuentras información sobre {itemName}. Quizás necesitas buscarlo primero.";
+        }
+        
+        /// <summary>
+        /// Helper para formatear lista de objetos
+        /// </summary>
+        private string GetObjectsText(List<string> objects)
+        {
+            if (objects == null || objects.Count == 0)
+            {
+                return "nada visible";
+            }
+            
+            return string.Join(", ", objects);
         }
         
         public void SetSystemPrompt(string prompt)

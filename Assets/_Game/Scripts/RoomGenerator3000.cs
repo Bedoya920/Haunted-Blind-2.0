@@ -22,12 +22,14 @@ public class RoomGenerator3000 : MonoBehaviour
         int x = tamMatriz / 2;
         int y = tamMatriz - 1;
         casa = new House();
+        casa.id = Random.Range(10000, 99999); // Generar ID aquí, no en constructor
         casa.habitacionInicial = new Vector2Int(x, y);
 
         int habiCreadas = 1;
         habitaciones[x, y] = 1;
 
         Room room = new Room();
+        room.id = Random.Range(10000, 99999); // Generar ID aquí, no en constructor
         room.nombre = "Sala";
         room.posicion = new Vector2Int(x, y);
         habitacionesRoom[x, y] = room;
@@ -50,6 +52,7 @@ public class RoomGenerator3000 : MonoBehaviour
                 habiCreadas++;
 
                 Room _room = new Room(new Vector2Int(nx, ny));
+                _room.id = Random.Range(10000, 99999); // Generar ID aquí, no en constructor
                 _room.nombre = "Cuarto";
                 habitacionesRoom[nx, ny] = _room;
 
@@ -90,6 +93,7 @@ public class RoomGenerator3000 : MonoBehaviour
         foreach (var puerta in puertasBase)
         {
             Door door = new Door();
+            door.id = Random.Range(10000, 99999); // Generar ID aquí, no en constructor
             door.cuarto1 = puerta.desde;
             door.cuarto2 = puerta.hasta;
 

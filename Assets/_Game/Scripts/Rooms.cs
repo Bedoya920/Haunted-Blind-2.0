@@ -49,14 +49,20 @@ public class Room
     public string   descripCorta;
     public int      puertas;
     public Vector2Int posicion;
+    
+    // NUEVOS CAMPOS (opcionales, pueden estar vacíos)
+    [Header("Voice System Integration (Opcional)")]
+    public List<string> objetosEnHabitacion = new List<string>(); // Para sistema de voz
 
     public Room()
     {
-        id = Random.Range(10000, 99999);
+        // No generar ID aquí - se genera en el RoomGenerator al crear habitaciones
+        id = 0;
     }
     public Room(Vector2Int pos)
     {
-        id = Random.Range(10000, 99999);
+        // No generar ID aquí - se genera en el RoomGenerator al crear habitaciones
+        id = 0;
         posicion = pos;
     }
 
@@ -71,9 +77,15 @@ public class Door
     public string mensajeBloqueada;
     public string mensajeAbrir;
     public Vector2Int cuarto1, cuarto2;
+    
+    // NUEVO CAMPO (opcional)
+    [Header("Voice System Integration (Opcional)")]
+    public string descripcionPuerta = ""; // Descripción detallada para inspeccionar
+    
     public Door()
     {
-        id = Random.Range(10000, 99999);
+        // No generar ID aquí - se genera en el RoomGenerator al crear puertas
+        id = 0;
         abierta = true;
         variableNecesaria = -1;
     }
@@ -81,7 +93,6 @@ public class Door
 
 
 [System.Serializable]
-
 public class House
 {
     public int id;
@@ -91,7 +102,8 @@ public class House
 
     public House()
     {
-        id = Random.Range(10000, 99999);
+        // No generar ID aquí - se genera en el RoomGenerator al crear la casa
+        id = 0;
         habitaciones = new List<Room>();
         puertas = new List<Door>();
         
