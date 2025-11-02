@@ -46,7 +46,7 @@ namespace VoiceSystem.GameIntegration
         
         private void SetupDemoContext()
         {
-            currentContext.currentLocation = demoLocations[currentLocationIndex];
+            // Set up basic stats
             currentContext.health = 5;
             currentContext.maxHealth = 5;
             currentContext.fatigue = 0;
@@ -60,15 +60,169 @@ namespace VoiceSystem.GameIntegration
             currentContext.inventory.Add("comida");
             currentContext.inventory.Add("agua");
             
-            // Demo nearby objects based on location
-            UpdateNearbyObjects();
+            // Setup room system with demo data
+            SetupDemoRooms();
+            
+            // Set current location from currentRoom
+            if (currentContext.currentRoom != null)
+            {
+                currentContext.currentLocation = currentContext.currentRoom.roomName;
+                
+                // Update nearby objects from room
+                currentContext.nearbyObjects.Clear();
+                if (currentContext.currentRoom.objects != null)
+                {
+                    currentContext.nearbyObjects.AddRange(currentContext.currentRoom.objects);
+                }
+            }
+            else
+            {
+                currentContext.currentLocation = demoLocations[currentLocationIndex];
+                UpdateNearbyObjects();
+            }
             
             // Demo recent events
             currentContext.recentEvents.Clear();
             currentContext.AddEvent("Llegaste a la casa");
             currentContext.AddEvent("El reloj marca las 2 AM");
             
-            Debug.Log($"[GameContext] Demo context set up for location: {currentContext.currentLocation}");
+            Debug.Log($"[GameContext] Demo context set up for room: {currentContext.currentRoom?.roomName ?? currentContext.currentLocation}");
+        }
+        
+        private void SetupDemoRooms()
+        {
+            // Create demo rooms with doors
+            var salaRoom = new RoomData
+            {
+                roomId = "room_sala",
+                roomName = "Sala Principal",
+                shortDescription = "Una habitación amplia y polvorienta",
+                longDescription = "Una sala amplia con muebles cubiertos de polvo. Las cortinas rasgadas dejan pasar rayos de luz tenue. Hueles a madera vieja y polvo. Escuchas el eco de tus pasos.",
+                doors = new List<DoorData>
+                {
+                    new DoorData 
+                    { 
+                        doorId = "door_sala_north", 
+                        doorName = "Puerta al Comedor", 
+                        direction = "norte", 
+                        isLocked = false, 
+                        leadsToRoomId = "room_comedor",
+                        description = "Una puerta de madera oscura con tallados ornamentales"
+                    },
+                    new DoorData 
+                    { 
+                        doorId = "door_sala_east", 
+                        doorName = "Puerta a la Biblioteca", 
+                        direction = "este", 
+                        isLocked = true, 
+                        leadsToRoomId = "room_biblioteca",
+                        keyItemId = "llave_biblioteca",
+                        description = "Una puerta pesada con cerradura dorada. Está firmemente cerrada"
+                    },
+                    new DoorData 
+                    { 
+                        doorId = "door_sala_west", 
+                        doorName = "Puerta a la Cocina", 
+                        direction = "oeste", 
+                        isLocked = false, 
+                        leadsToRoomId = "room_cocina",
+                        description = "Una puerta entreabiert que conduce a la cocina"
+                    }
+                },
+                objects = new List<string> { "cuadro familiar", "piano", "reloj" }
+            };
+            
+            var comedorRoom = new RoomData
+            {
+                roomId = "room_comedor",
+                roomName = "Comedor",
+                shortDescription = "Una mesa larga cubierta de polvo",
+                longDescription = "Una gran mesa de madera domina el centro de la habitación. Los platos y cubiertos están desordenados, como si alguien hubiera abandonado la cena repentinamente.",
+                doors = new List<DoorData>
+                {
+                    new DoorData 
+                    { 
+                        doorId = "door_comedor_south", 
+                        doorName = "Puerta a la Sala", 
+                        direction = "sur", 
+                        isLocked = false, 
+                        leadsToRoomId = "room_sala",
+                        description = "La puerta por donde entraste"
+                    },
+                    new DoorData 
+                    { 
+                        doorId = "door_comedor_east", 
+                        doorName = "Puerta a la Habitación Principal", 
+                        direction = "este", 
+                        isLocked = false, 
+                        leadsToRoomId = "room_habitacion_principal",
+                        description = "Una puerta elegante con marco dorado"
+                    }
+                },
+                objects = new List<string> { "mesa", "sillas", "vajilla" }
+            };
+            
+            var bibliotecaRoom = new RoomData
+            {
+                roomId = "room_biblioteca",
+                roomName = "Biblioteca",
+                shortDescription = "Una habitación llena de libros antiguos",
+                longDescription = "Estantes altos repletos de libros antiguos cubren las paredes. El aire huele a papel viejo y humedad. Una lámpara de pie proyecta sombras inquietantes.",
+                doors = new List<DoorData>
+                {
+                    new DoorData 
+                    { 
+                        doorId = "door_biblioteca_west", 
+                        doorName = "Puerta a la Sala", 
+                        direction = "oeste", 
+                        isLocked = false, 
+                        leadsToRoomId = "room_sala",
+                        description = "La puerta por donde entraste"
+                    }
+                },
+                objects = new List<string> { "libros", "estantes", "mesa", "llave_sotano" }
+            };
+            
+            var cocinaRoom = new RoomData
+            {
+                roomId = "room_cocina",
+                roomName = "Cocina",
+                shortDescription = "Un lugar oscuro con utensilios oxidados",
+                longDescription = "Una cocina abandonada con ollas y sartenes oxidadas. El refrigerador está abierto y vacío. El aire es pesado y húmedo.",
+                doors = new List<DoorData>
+                {
+                    new DoorData 
+                    { 
+                        doorId = "door_cocina_east", 
+                        doorName = "Puerta a la Sala", 
+                        direction = "este", 
+                        isLocked = false, 
+                        leadsToRoomId = "room_sala",
+                        description = "La puerta por donde entraste"
+                    },
+                    new DoorData 
+                    { 
+                        doorId = "door_cocina_down", 
+                        doorName = "Puerta al Sótano", 
+                        direction = "abajo", 
+                        isLocked = true, 
+                        leadsToRoomId = "room_sotano",
+                        keyItemId = "llave_sotano",
+                        description = "Una puerta de metal pesada con cerrojo oxidado. Algo susurra detrás de ella"
+                    }
+                },
+                objects = new List<string> { "estufa", "refrigerador", "utensilios" }
+            };
+            
+            // Set current room
+            currentContext.currentRoom = salaRoom;
+            
+            // Add all rooms to dictionary for future reference
+            currentContext.allRooms.Clear();
+            currentContext.allRooms.Add(salaRoom.roomId, salaRoom);
+            currentContext.allRooms.Add(comedorRoom.roomId, comedorRoom);
+            currentContext.allRooms.Add(bibliotecaRoom.roomId, bibliotecaRoom);
+            currentContext.allRooms.Add(cocinaRoom.roomId, cocinaRoom);
         }
         
         private void UpdateNearbyObjects()

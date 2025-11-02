@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using VoiceSystem.Core.Interfaces;
+using VoiceSystem.GameIntegration;
 
 namespace VoiceSystem.Synthesis
 {
@@ -23,6 +24,11 @@ namespace VoiceSystem.Synthesis
         public int rate = 0; // -10 to 10
         public int volume = 100; // 0 to 100
         
+        [Header("Game Pause")]
+        [SerializeField] private bool pauseGameDuringSpeech = true;
+        [Tooltip("Reference to GamePauseManager (auto-assigned if null)")]
+        [SerializeField] private GamePauseManager gamePauseManager;
+        
         // P/Invoke declarations for Windows SAPI
         [DllImport("winmm.dll", SetLastError = true)]
         private static extern bool PlaySound(string pszSound, IntPtr hmod, uint fdwSound);
@@ -34,11 +40,24 @@ namespace VoiceSystem.Synthesis
         {
             // Ensure main thread dispatcher exists
             UnityMainThreadDispatcher.Instance();
+            
+            // Get or create GamePauseManager if needed
+            if (pauseGameDuringSpeech && gamePauseManager == null)
+            {
+                gamePauseManager = GamePauseManager.Instance;
+            }
         }
         
         public void Initialize()
         {
             Debug.Log("[WindowsTTS] Plugin initialized - READY FOR REAL AUDIO");
+            
+            // Ensure GamePauseManager is available if pause is enabled
+            if (pauseGameDuringSpeech && gamePauseManager == null)
+            {
+                gamePauseManager = GamePauseManager.Instance;
+                Debug.Log("[WindowsTTS] GamePauseManager reference assigned");
+            }
         }
         
         public void Speak(string text, TTSPriority priority = TTSPriority.Normal)
@@ -52,6 +71,13 @@ namespace VoiceSystem.Synthesis
             Debug.Log($"[WindowsTTS] Speaking: {text}");
             
             IsSpeaking = true;
+            
+            // Pause game if enabled
+            if (pauseGameDuringSpeech && gamePauseManager != null)
+            {
+                gamePauseManager.PauseGame();
+            }
+            
             OnSpeechStarted?.Invoke(text);
             
             // Usar PowerShell para sintetizar voz
@@ -93,6 +119,13 @@ $synth.Dispose();
                     UnityMainThreadDispatcher.Instance().Enqueue(() =>
                     {
                         IsSpeaking = false;
+                        
+                        // Resume game if it was paused
+                        if (pauseGameDuringSpeech && gamePauseManager != null)
+                        {
+                            gamePauseManager.ResumeGame();
+                        }
+                        
                         OnSpeechCompleted?.Invoke(text);
                         Debug.Log($"[WindowsTTS] Speech completed: {text}");
                     });
@@ -103,6 +136,12 @@ $synth.Dispose();
                 Debug.LogError($"[WindowsTTS] Error: {e.Message}");
                 OnError?.Invoke(e.Message);
                 IsSpeaking = false;
+                
+                // Resume game on error
+                if (pauseGameDuringSpeech && gamePauseManager != null && gamePauseManager.IsGamePaused)
+                {
+                    gamePauseManager.ResumeGame();
+                }
             }
         }
         
@@ -117,6 +156,13 @@ $synth.Dispose();
                     process.Kill();
                 }
                 IsSpeaking = false;
+                
+                // Resume game if it was paused
+                if (pauseGameDuringSpeech && gamePauseManager != null && gamePauseManager.IsGamePaused)
+                {
+                    gamePauseManager.ResumeGame();
+                }
+                
                 Debug.Log("[WindowsTTS] Speech stopped");
             }
             catch (Exception e)

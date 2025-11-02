@@ -27,13 +27,16 @@ namespace VoiceSystem.Editor
                 // 2. Agregar componentes reales
                 AddRealComponents(managerGO);
                 
-                // 3. Crear configuraciones
+                // 3. Asegurar GamePauseManager existe
+                EnsureGamePauseManager();
+                
+                // 4. Crear configuraciones
                 CreateConfigurations();
                 
-                // 4. Asignar referencias
+                // 5. Asignar referencias
                 AssignReferences(managerGO);
                 
-                // 5. Configurar permisos
+                // 6. Configurar permisos
                 ConfigurePermissions();
                 
                 Debug.Log("=== SISTEMA DE VOZ REAL CONFIGURADO ===");
@@ -42,10 +45,11 @@ namespace VoiceSystem.Editor
                     "Sistema de Voz Real Configurado", 
                     "El sistema de voz real ha sido configurado correctamente:\n\n" +
                     "✅ WindowsSpeechRecognizer - Escucha tu voz real\n" +
-                    "✅ UnityTextToSpeech - Habla de verdad\n" +
+                    "✅ WindowsTTSPlugin - Habla de verdad\n" +
                     "✅ BasicAIAssistant - IA funcional\n" +
                     "✅ GameContextProvider - Contexto del juego\n" +
-                    "✅ AICommandExecutor - Ejecuta comandos\n\n" +
+                    "✅ AICommandExecutor - Ejecuta comandos\n" +
+                    "✅ GamePauseManager - Pausa durante narración\n\n" +
                     "Presiona Play para usar el sistema real.", 
                     "¡Perfecto!"
                 );
@@ -108,6 +112,21 @@ namespace VoiceSystem.Editor
             // Agregar AICommandExecutor
             var executor = managerGO.AddComponent<AICommandExecutor>();
             Debug.Log("✅ AICommandExecutor agregado");
+        }
+        
+        private static void EnsureGamePauseManager()
+        {
+            // Check if GamePauseManager already exists
+            var existing = Object.FindFirstObjectByType<GamePauseManager>();
+            if (existing != null)
+            {
+                Debug.Log("✅ GamePauseManager ya existe");
+                return;
+            }
+            
+            // Create GamePauseManager (will be auto-created as singleton when accessed)
+            var pauseManager = GamePauseManager.Instance;
+            Debug.Log("✅ GamePauseManager creado automáticamente");
         }
         
         private static void CreateConfigurations()

@@ -92,6 +92,16 @@ namespace VoiceSystem.AI
                 {"inventario", "Tienes estos objetos: {inventory}. Tu vida es {health}/5 y tienes {actions} acciones restantes."},
                 {"qué tengo", "Tienes: {inventory}. También tienes {actions} acciones disponibles."},
                 
+                // Door queries
+                {"qué puertas hay", "Las puertas disponibles son: {available_doors}."},
+                {"cuántas puertas hay", "Hay {door_count} puertas en esta habitación: {available_doors}."},
+                {"qué puertas", "Puedes ver las siguientes puertas: {available_doors}."},
+                {"puertas", "Las puertas de esta habitación: {available_doors}."},
+                {"inspeccionar puerta", "Examinas la puerta. {door_description}"},
+                {"ver puerta", "{door_description}"},
+                {"está bloqueada", "{door_lock_status}"},
+                {"puerta bloqueada", "{door_lock_status}"},
+                
                 // Movement commands
                 {"adelante", "Avanzas hacia adelante. [CMD:adelante]"},
                 {"atrás", "Retrocedes. [CMD:atrás]"},
@@ -240,9 +250,18 @@ namespace VoiceSystem.AI
         {
             string response = template;
             
-            // Replace placeholders
+            // Replace placeholders - Legacy location
             response = response.Replace("{location}", context.currentLocation);
             response = response.Replace("{location_description}", GetLocationDescription(context.currentLocation));
+            
+            // Room system placeholders
+            response = response.Replace("{room_name}", context.currentRoom?.roomName ?? context.currentLocation);
+            response = response.Replace("{room_description}", context.currentRoom?.shortDescription ?? GetLocationDescription(context.currentLocation));
+            response = response.Replace("{room_long_description}", context.currentRoom?.longDescription ?? GetLocationDescription(context.currentLocation));
+            response = response.Replace("{available_doors}", GetDoorsText(context.GetAvailableDoors()));
+            response = response.Replace("{door_count}", context.GetAvailableDoors().Count.ToString());
+            
+            // Player state placeholders
             response = response.Replace("{inventory}", GetInventoryText(context.inventory));
             response = response.Replace("{health}", context.health.ToString());
             response = response.Replace("{max_health}", context.maxHealth.ToString());
@@ -288,6 +307,13 @@ namespace VoiceSystem.AI
         
         private string GenerateDefaultResponse(string userInput, GameContext context)
         {
+            // Check for door-specific queries first
+            string doorResponse = TryProcessDoorQuery(userInput, context);
+            if (!string.IsNullOrEmpty(doorResponse))
+            {
+                return doorResponse;
+            }
+            
             // Try to extract a command from natural language
             if (commandLibrary != null)
             {
@@ -301,7 +327,107 @@ namespace VoiceSystem.AI
             }
             
             // Default response
-            return "No estoy seguro de lo que quieres hacer. Puedes preguntarme por ayuda o usar comandos como 'inspeccionar', 'adelante', 'atrás', 'información', etc.";
+            return "No estoy seguro de lo que quieres hacer. Puedes preguntarme por ayuda o usar comandos como 'inspeccionar', 'adelante', 'atrás', 'información', 'qué puertas hay', etc.";
+        }
+        
+        /// <summary>
+        /// Try to process door-specific queries
+        /// </summary>
+        private string TryProcessDoorQuery(string userInput, GameContext context)
+        {
+            string lowerInput = userInput.ToLower().Trim();
+            
+            // Extract direction or door name from input
+            string[] directions = { "norte", "sur", "este", "oeste" };
+            string foundDirection = null;
+            
+            foreach (var dir in directions)
+            {
+                if (lowerInput.Contains(dir))
+                {
+                    foundDirection = dir;
+                    break;
+                }
+            }
+            
+            // "inspeccionar puerta [dirección]"
+            if (lowerInput.Contains("inspeccionar") && lowerInput.Contains("puerta"))
+            {
+                if (foundDirection != null)
+                {
+                    var door = context.GetDoorByDirection(foundDirection);
+                    if (door != null)
+                    {
+                        return $"{door.doorName} ({door.direction}): {door.description}. " +
+                               (door.isLocked ? "Está BLOQUEADA." : "Está abierta.");
+                    }
+                    return $"No hay ninguna puerta hacia el {foundDirection}.";
+                }
+                
+                // No direction specified, list all doors
+                return $"¿Qué puerta quieres inspeccionar? Las puertas disponibles son: {GetDoorsText(context.GetAvailableDoors())}";
+            }
+            
+            // "abrir puerta [dirección]" or "usar puerta [dirección]"
+            if ((lowerInput.Contains("abrir") || lowerInput.Contains("usar")) && lowerInput.Contains("puerta"))
+            {
+                if (foundDirection != null)
+                {
+                    var door = context.GetDoorByDirection(foundDirection);
+                    if (door != null)
+                    {
+                        if (context.CanUseDoor(door, out string reason))
+                        {
+                            return $"Abres {door.doorName} y avanzas hacia {door.leadsToRoomId}. [CMD:usar_puerta_{door.doorId}]";
+                        }
+                        else
+                        {
+                            return reason;
+                        }
+                    }
+                    return $"No hay ninguna puerta hacia el {foundDirection}.";
+                }
+                
+                return $"¿Qué puerta quieres usar? Las puertas disponibles son: {GetDoorsText(context.GetAvailableDoors())}";
+            }
+            
+            // "está bloqueada la puerta [dirección]"
+            if (lowerInput.Contains("bloqueada") && foundDirection != null)
+            {
+                var door = context.GetDoorByDirection(foundDirection);
+                if (door != null)
+                {
+                    if (door.isLocked)
+                    {
+                        if (!string.IsNullOrEmpty(door.keyItemId))
+                        {
+                            return $"Sí, {door.doorName} está bloqueada. Necesitas: {door.keyItemId}.";
+                        }
+                        return $"Sí, {door.doorName} está bloqueada y no se puede abrir.";
+                    }
+                    return $"No, {door.doorName} está abierta.";
+                }
+                return $"No hay ninguna puerta hacia el {foundDirection}.";
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// Get formatted text for doors list
+        /// </summary>
+        private string GetDoorsText(List<DoorData> doors)
+        {
+            if (doors == null || doors.Count == 0)
+            {
+                return "no hay puertas visibles";
+            }
+            
+            var doorDescriptions = doors.Select(d => 
+                $"{d.doorName} ({d.direction})" + (d.isLocked ? " [bloqueada]" : "")
+            );
+            
+            return string.Join(", ", doorDescriptions);
         }
         
         public void SetSystemPrompt(string prompt)

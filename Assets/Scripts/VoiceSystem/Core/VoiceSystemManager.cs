@@ -20,6 +20,7 @@ namespace VoiceSystem.Core
         public BasicAIAssistant aiAssistant;
         public GameContextProvider contextProvider;
         public AICommandExecutor commandExecutor;
+        public GameIntegration.GamePauseManager gamePauseManager;
         
         // Interfaces (asignadas automáticamente)
         public ISpeechRecognizer speechRecognizer { get; private set; }
@@ -33,6 +34,9 @@ namespace VoiceSystem.Core
         [Header("Debug")]
         public bool enableDebugLogs = true;
         public bool autoStartListening = false; // Disabled by default to prevent conflicts
+        
+        [Header("Game Pause Settings")]
+        [SerializeField] private bool pauseGameDuringNarration = true;
         
         // Events
         public event Action<string> OnPlayerSpoke;
@@ -163,6 +167,19 @@ namespace VoiceSystem.Core
             if (commandExecutor != null)
             {
                 commandExecutor.contextProvider = contextProvider;
+            }
+            
+            // Initialize game pause manager
+            if (gamePauseManager == null && pauseGameDuringNarration)
+            {
+                gamePauseManager = GameIntegration.GamePauseManager.Instance;
+                LogDebug("GamePauseManager initialized");
+            }
+            
+            // Subscribe to pause events
+            if (gamePauseManager != null)
+            {
+                gamePauseManager.OnGamePausedChanged += OnGamePauseStateChanged;
             }
         }
         
@@ -351,6 +368,18 @@ namespace VoiceSystem.Core
             OnError?.Invoke($"TTS error: {error}");
         }
         
+        private void OnGamePauseStateChanged(bool isPaused)
+        {
+            if (isPaused)
+            {
+                LogDebug("Game PAUSED - Narrator is speaking");
+            }
+            else
+            {
+                LogDebug("Game RESUMED - Narrator finished speaking");
+            }
+        }
+        
         #endregion
         
         #region Debug Methods
@@ -432,6 +461,12 @@ namespace VoiceSystem.Core
             
             if (aiAssistant != null)
                 aiAssistant.Dispose();
+            
+            // Unsubscribe from pause events
+            if (gamePauseManager != null)
+            {
+                gamePauseManager.OnGamePausedChanged -= OnGamePauseStateChanged;
+            }
         }
         
         private void OnApplicationPause(bool pauseStatus)
