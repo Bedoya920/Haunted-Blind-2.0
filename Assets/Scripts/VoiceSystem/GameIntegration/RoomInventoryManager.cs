@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using VoiceSystem.Core.Data;
+using Object = UnityEngine.Object;
 
 namespace VoiceSystem.GameIntegration
 {
@@ -273,6 +274,12 @@ namespace VoiceSystem.GameIntegration
             if (!string.IsNullOrEmpty(item.eventToTriggerOnCollect))
             {
                 TriggerCollectionEvent(item);
+            }
+            
+            // EVENTO ESPECIAL: Oso de peluche activa evento del niño
+            if (item.itemId == "toy_bear")
+            {
+                TriggerBearEvent(item);
             }
             
             // NUEVO: Si es llave, desbloquear puerta automáticamente
@@ -564,6 +571,54 @@ namespace VoiceSystem.GameIntegration
             }
             
             Debug.Log($"TOTALES: {totalItems} items, {totalHidden} ocultos, {totalCollected} recogidos");
+        }
+        
+        #endregion
+        
+        #region Eventos Especiales
+        
+        /// <summary>
+        /// Evento especial al tomar el oso de peluche
+        /// </summary>
+        private void TriggerBearEvent(RoomItem bearItem)
+        {
+            Debug.Log("[RoomInventory] 🧸 EVENTO DEL OSO ACTIVADO");
+            
+            // Marcar flag del evento del niño
+            var playerState = PlayerStateManager.Instance;
+            if (playerState != null)
+            {
+                playerState.SetEventFlag("child_event_triggered");
+                Debug.Log("[RoomInventory] ✅ Flag 'child_event_triggered' marcado");
+            }
+            
+            // Narrar el evento del oso (versión MUY CORTA para evitar bloqueos completos)
+            var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+            if (voiceSystem?.textToSpeech != null)
+            {
+                // CRÍTICO: Usar narración EXTREMADAMENTE corta para evitar bloqueos
+                string narration = "Tomaste el oso de peluche. Una voz infantil susurra: Lo encontraste. " +
+                                 "Llévalo al lugar de su descanso.";
+                
+                voiceSystem.textToSpeech.Speak(narration, VoiceSystem.Core.Interfaces.TTSPriority.Normal);
+                Debug.Log($"[RoomInventory] 📖 Narración del oso INICIADA: {narration.Length} caracteres");
+            }
+            else
+            {
+                Debug.LogWarning("[RoomInventory] ⚠️ VoiceSystem TTS no disponible para narrar evento del oso");
+            }
+            
+            // Activar sistema de screamers usando SendMessage para evitar dependencia de tipo
+            var screamerSystemObj = GameObject.Find("GameManager");
+            if (screamerSystemObj != null)
+            {
+                screamerSystemObj.SendMessage("ActivateScreamers", SendMessageOptions.DontRequireReceiver);
+                Debug.Log("[RoomInventory] ✅ Mensaje ActivateScreamers enviado a GameManager");
+            }
+            else
+            {
+                Debug.LogWarning("[RoomInventory] GameManager no encontrado, pero el evento del oso se disparó correctamente");
+            }
         }
         
         #endregion

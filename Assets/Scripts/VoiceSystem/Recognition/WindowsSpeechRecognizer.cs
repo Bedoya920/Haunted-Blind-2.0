@@ -25,6 +25,7 @@ namespace VoiceSystem.Recognition
         public bool IsListening { get; private set; }
         public bool IsInitialized { get; private set; }
         private bool isPaused = false; // NUEVO: Para pausar mientras habla el narrador
+        public bool IsPaused => isPaused; // Propiedad pública para monitoreo
         
         // Windows Speech Recognition
         private DictationRecognizer dictationRecognizer;

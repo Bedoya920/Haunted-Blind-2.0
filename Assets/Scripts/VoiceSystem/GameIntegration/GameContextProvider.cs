@@ -16,6 +16,9 @@ namespace VoiceSystem.GameIntegration
         [Header("Game References")]
         public EventManager eventManager;
         
+        [Header("Reading State")]
+        private Dictionary<string, int> roomReadingIndex = new Dictionary<string, int>(); // Tracking de qué libro sigue por habitación
+        
         // Current context
         private GameContext currentContext;
         
@@ -284,6 +287,11 @@ namespace VoiceSystem.GameIntegration
                 case "despertar":
                     AttemptAwakening();
                     break;
+                case "hora":
+                case "tiempo":
+                case "reloj":
+                    CheckCurrentTime();
+                    break;
                 case "buscar":
                     {
                         var validator = CommandValidator.Instance;
@@ -532,16 +540,53 @@ namespace VoiceSystem.GameIntegration
         
         private void TakeObject()
         {
-            if (currentContext.nearbyObjects.Count > 0)
+            // NUEVO: Usar RoomInventoryManager en lugar de nearbyObjects
+            var inventoryManager = RoomInventoryManager.Instance;
+            var roomBridge = RoomSystemBridge.Instance;
+            
+            if (inventoryManager == null || roomBridge == null)
             {
-                string objectToTake = currentContext.nearbyObjects[0];
-                currentContext.nearbyObjects.RemoveAt(0);
-                currentContext.inventory.Add(objectToTake);
-                currentContext.AddEvent($"Tomaste: {objectToTake}");
+                currentContext.AddEvent("No puedes tomar nada ahora");
+                return;
+            }
+            
+            string currentRoomId = currentContext.currentRoom?.roomId ?? "";
+            
+            // Obtener objetos visibles que se pueden tomar
+            var inventory = inventoryManager.GetRoomInventory(currentRoomId);
+            var takableItems = inventory.GetVisibleItems().FindAll(i => !i.isCollected);
+            
+            if (takableItems.Count == 0)
+            {
+                currentContext.AddEvent("No hay nada que tomar aquí");
+                
+                // Narrar con voz
+                var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                voiceSystem?.textToSpeech?.Speak("No hay nada que tomar aquí");
+                return;
+            }
+            
+            // Tomar el primer objeto disponible
+            var itemToTake = takableItems[0];
+            if (inventoryManager.TryTakeItem(currentRoomId, itemToTake.itemId, out RoomItem item, out string failReason))
+            {
+                currentContext.AddEvent($"Tomaste: {item.itemName}");
+                
+                // Narrar confirmación
+                var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                voiceSystem?.textToSpeech?.Speak($"Tomaste {item.itemName}");
+                
+                Debug.Log($"[GameContext] ✅ Objeto recogido: {item.itemName}");
             }
             else
             {
-                currentContext.AddEvent("No hay nada que tomar aquí");
+                currentContext.AddEvent($"No puedes tomar eso: {failReason}");
+                
+                // Narrar razón del fallo
+                var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                voiceSystem?.textToSpeech?.Speak(failReason);
+                
+                Debug.LogWarning($"[GameContext] ❌ No se pudo tomar {itemToTake.itemName}: {failReason}");
             }
         }
         
@@ -575,26 +620,80 @@ namespace VoiceSystem.GameIntegration
             // Buscar objetos legibles en la habitación
             var inventory = inventoryManager.GetRoomInventory(currentRoomId);
             var readableItems = inventory.GetVisibleItems().FindAll(i => 
-                i.itemId.Contains("diary") || i.itemId.Contains("book") || i.itemId.Contains("note") || i.itemId.Contains("readable"));
+                i.itemId.Contains("diary") || i.itemId.Contains("book") || i.itemId.Contains("note") || i.itemId.Contains("readable") || i.itemId.Contains("letter"));
             
             if (readableItems.Count == 0)
             {
                 currentContext.AddEvent("No hay nada que leer aquí");
+                
+                // Narrar con voz
+                var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                voiceSystem?.textToSpeech?.Speak("No hay nada que leer aquí");
                 return;
             }
             
-            // Leer el primer objeto legible
-            var itemToRead = readableItems[0];
-            if (inventoryManager.TryInspectItem(currentRoomId, itemToRead.itemId, out RoomItem item, out string description))
+            // Si hay múltiples libros, leer el siguiente en secuencia
+            if (readableItems.Count > 1)
+            {
+                // Obtener índice actual de lectura para esta habitación
+                if (!roomReadingIndex.ContainsKey(currentRoomId))
+                {
+                    roomReadingIndex[currentRoomId] = 0;
+                }
+                
+                int currentIndex = roomReadingIndex[currentRoomId];
+                
+                // Si ya leyó todos los libros, informar
+                if (currentIndex >= readableItems.Count)
+                {
+                    var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                    voiceSystem?.textToSpeech?.Speak("Ya leíste todos los libros aquí.", VoiceSystem.Core.Interfaces.TTSPriority.Normal);
+                    return;
+                }
+                
+                // Leer el libro actual
+                var bookToRead = readableItems[currentIndex];
+                ReadSpecificItem(bookToRead, currentRoomId, inventoryManager);
+                
+                // Incrementar índice para la próxima lectura
+                roomReadingIndex[currentRoomId] = currentIndex + 1;
+                
+                // Informar cuántos libros quedan
+                int remaining = readableItems.Count - (currentIndex + 1);
+                if (remaining > 0)
+                {
+                    Debug.Log($"[GameContext] 📚 Quedan {remaining} libros por leer en esta habitación");
+                }
+            }
+            else
+            {
+                // Leer el único objeto legible
+                ReadSpecificItem(readableItems[0], currentRoomId, inventoryManager);
+            }
+        }
+        
+        /// <summary>
+        /// Lee un objeto específico
+        /// </summary>
+        private void ReadSpecificItem(RoomItem itemToRead, string roomId, RoomInventoryManager inventoryManager)
+        {
+            if (inventoryManager.TryInspectItem(roomId, itemToRead.itemId, out RoomItem item, out string description))
             {
                 currentContext.AddEvent($"Lees {item.itemName}: {description}");
                 
-                // Narrar con voz (prioridad URGENTE para que no sea interrumpido)
+                // Narrar con voz (prioridad NORMAL para no bloquear el juego)
                 var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
                 if (voiceSystem?.textToSpeech != null)
                 {
-                    Debug.Log($"[GameContext] 📖 Narrando lectura de {item.itemName}: {description.Substring(0, Mathf.Min(50, description.Length))}...");
-                    voiceSystem.textToSpeech.Speak(description, VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+                    Debug.Log($"[GameContext] 📖 Narrando lectura de {item.itemName} ({description.Length} caracteres)");
+                    
+                    // Si la narración es muy larga (>500 caracteres), usar prioridad Normal
+                    // Si es corta, usar Urgent para que no se pierda
+                    var priority = description.Length > 500 
+                        ? VoiceSystem.Core.Interfaces.TTSPriority.Normal 
+                        : VoiceSystem.Core.Interfaces.TTSPriority.Urgent;
+                    
+                    voiceSystem.textToSpeech.Speak(description, priority);
                 }
                 else
                 {
@@ -609,6 +708,31 @@ namespace VoiceSystem.GameIntegration
         
         private void GiveObject()
         {
+            // Verificar si el jugador está intentando dar la flor al retrato
+            var playerState = PlayerStateManager.Instance;
+            
+            if (playerState != null && playerState.HasItem("lotus_flower_alive"))
+            {
+                // El jugador tiene la flor viva
+                var currentRoom = roomBridge?.GetCurrentRoom();
+                
+                if (currentRoom != null && currentRoom.roomId == "room_2") // Sala Principal
+                {
+                    // Está en la Sala Principal con la flor
+                    currentContext.AddEvent("Extiendes la flor de loto viva hacia el retrato familiar. Los pétalos brillan con intensidad.");
+                    
+                    // Narrar
+                    var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                    voiceSystem?.textToSpeech?.Speak("Extiendes la flor hacia el retrato. Ahora di Renacer para completar el ritual.", VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+                    
+                    // Marcar que dio la flor
+                    playerState.SetEventFlag("gave_flower_to_portrait");
+                    
+                    return;
+                }
+            }
+            
+            // Comportamiento por defecto
             if (currentContext.inventory.Count > 0)
             {
                 string objectToGive = currentContext.inventory[0];
@@ -623,10 +747,25 @@ namespace VoiceSystem.GameIntegration
         
         private void AttemptRebirth()
         {
-            if (currentContext.inventory.Contains("flor de loto"))
+            var playerState = PlayerStateManager.Instance;
+            var winManager = WinConditionManager.Instance;
+            
+            // Verificar que haya dado la flor al retrato primero
+            if (playerState != null && playerState.HasSeenEvent("gave_flower_to_portrait"))
             {
-                currentContext.AddEvent("¡Usaste la flor de loto y lograste renacer! ¡Has ganado!");
-                // Game win condition
+                // Intentar victoria
+                if (winManager != null)
+                {
+                    winManager.AttemptVictory();
+                }
+                else
+                {
+                    currentContext.AddEvent("¡Usaste la flor de loto y lograste renacer! ¡Has ganado!");
+                }
+            }
+            else if (playerState != null && playerState.HasItem("lotus_flower_alive"))
+            {
+                currentContext.AddEvent("Primero debes dar la flor al retrato familiar. Di Dar.");
             }
             else
             {
@@ -636,7 +775,79 @@ namespace VoiceSystem.GameIntegration
         
         private void AttemptAwakening()
         {
-            currentContext.AddEvent("Intentas despertar, pero algo te mantiene atrapado en este lugar");
+            // Verificar si estamos en el diálogo del niño en el sótano
+            var basementDialogue = FindFirstObjectByType<BasementDoorDialogue>();
+            if (basementDialogue != null)
+            {
+                // Llamar al final malo
+                basementDialogue.OnPlayerSaidDespertar();
+                currentContext.AddEvent("Dijiste 'Despertar'... el niño responde");
+            }
+            else
+            {
+                currentContext.AddEvent("Intentas despertar, pero algo te mantiene atrapado en este lugar");
+            }
+        }
+        
+        /// <summary>
+        /// Verificar qué hora es en el juego
+        /// </summary>
+        private void CheckCurrentTime()
+        {
+            Debug.Log("[GameContext] CheckCurrentTime() llamado");
+            
+            var gameTimer = GameTimer.Instance;
+            if (gameTimer != null)
+            {
+                Debug.Log($"[GameContext] GameTimer encontrado. IsRunning: {gameTimer.IsRunning()}");
+                
+                string currentTime = gameTimer.GetCurrentTimeString();
+                int currentHour = gameTimer.GetCurrentHour();
+                
+                Debug.Log($"[GameContext] Hora actual: {currentTime} ({currentHour})");
+                
+                string narration = $"El reloj marca las {currentTime}.";
+                
+                // Añadir contexto especial para ciertas horas
+                if (currentHour == 2)
+                {
+                    narration += " Una sensación extraña te recorre. Es la hora en que los muertos hablan.";
+                }
+                else if (currentHour >= 0 && currentHour < 6)
+                {
+                    narration += " La madrugada avanza. El amanecer se acerca.";
+                }
+                else if (currentHour >= 18 && currentHour < 24)
+                {
+                    narration += " La noche acaba de empezar.";
+                }
+                
+                var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                if (voiceSystem?.textToSpeech != null)
+                {
+                    Debug.Log($"[GameContext] Hablando: {narration}");
+                    voiceSystem.textToSpeech.Speak(narration, VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+                }
+                else
+                {
+                    Debug.LogWarning("[GameContext] VoiceSystem o TTS es null");
+                }
+                
+                currentContext.AddEvent($"Revisaste el reloj: {currentTime}");
+                
+                Debug.Log($"[GameContext] 🕐 Jugador revisó la hora: {currentTime}");
+            }
+            else
+            {
+                Debug.LogError("[GameContext] GameTimer.Instance es NULL!");
+                currentContext.AddEvent("No puedes ver la hora");
+                
+                var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                if (voiceSystem?.textToSpeech != null)
+                {
+                    voiceSystem.textToSpeech.Speak("No puedes ver la hora", VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+                }
+            }
         }
         
         #region Item Actions

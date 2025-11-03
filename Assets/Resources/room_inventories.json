@@ -68,16 +68,16 @@
             "availableActions": ["inspeccionar", "tomar", "buscar"],
             "items": [
                 {
-                    "itemId": "food_apple",
-                    "itemName": "Manzana",
+                    "itemId": "food_bread_slice",
+                    "itemName": "Rodaja de pan",
                     "itemType": 1,
-                    "isVisible": true,
+                    "isVisible": false,
                     "isCollected": false,
-                    "shortDescription": "Una manzana marchita sobre la mesa",
-                    "longDescription": "Una manzana que parece haber estado aquí por años, pero aún es comestible. Huele extrañamente fresca.",
+                    "shortDescription": "Pan seco debajo del mantel",
+                    "longDescription": "Una rodaja de pan seco encontrada debajo del mantel. Está dura pero parece comestible.",
                     "healthRestore": 1,
                     "fatigueReduction": 1,
-                    "useMessage": "Comiste la manzana y recuperaste vida",
+                    "useMessage": "Comiste el pan seco",
                     "failMessage": "",
                     "requiredItemId": -1,
                     "requiredFlag": "",
@@ -91,21 +91,55 @@
             "availableActions": ["inspeccionar", "tomar", "leer", "buscar"],
             "items": [
                 {
-                    "itemId": "key_100",
-                    "itemName": "Llave del Sótano",
-                    "itemType": 0,
+                    "itemId": "book_fenix",
+                    "itemName": "Libro con sello de Fénix",
+                    "itemType": 3,
                     "isVisible": true,
                     "isCollected": false,
-                    "shortDescription": "Una llave oxidada sobre la mesa",
-                    "longDescription": "Una llave pesada y oxidada que huele a humedad. Tiene grabados extraños que no logras descifrar.",
+                    "shortDescription": "Un libro con un fénix grabado en la portada",
+                    "longDescription": "Solo aquel que duerme puede renacer. Solo aquel que despierta, puede morir otra vez. Las letras parecen escritas con tinta que respira; por un momento, juras ver el reflejo de una llama danzando entre las líneas.",
                     "healthRestore": 0,
                     "fatigueReduction": 0,
-                    "useMessage": "Usaste la llave para abrir la puerta del sótano",
+                    "useMessage": "",
                     "failMessage": "",
                     "requiredItemId": -1,
                     "requiredFlag": "",
-                    "flagToSetOnCollect": "has_basement_key",
-                    "eventToTriggerOnCollect": "Encontraste Llave del Sótano"
+                    "flagToSetOnCollect": "read_fenix_book",
+                    "eventToTriggerOnCollect": ""
+                },
+                {
+                    "itemId": "book_quimera",
+                    "itemName": "Libro con sello de Quimera",
+                    "itemType": 3,
+                    "isVisible": true,
+                    "isCollected": false,
+                    "shortDescription": "Un libro con una quimera grabada en la portada",
+                    "longDescription": "Relata la historia de una familia adinerada marcada por la tragedia. Una madre que buscaba devolver la vida a su hijo enfermo. Un padre que ofreció su tiempo para mantener la ilusión de un hogar perfecto. Y unos gemelos que nunca crecieron juntos: uno de carne, otro de memoria. Termina con: Cuando la voz del niño vuelva a oírse, no respondas.",
+                    "healthRestore": 0,
+                    "fatigueReduction": 0,
+                    "useMessage": "",
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "read_quimera_book",
+                    "eventToTriggerOnCollect": ""
+                },
+                {
+                    "itemId": "book_loto",
+                    "itemName": "Libro con sello de Flor de Loto",
+                    "itemType": 3,
+                    "isVisible": true,
+                    "isCollected": false,
+                    "shortDescription": "Un libro con una flor de loto grabada en la portada",
+                    "longDescription": "La flor duerme hasta que el tiempo se apaga. Cuando la sombra marque dos, el alma inocente esperará bajo la tierra. Pero no escucha a quien viene vacío. El regalo debe ser sostenido por manos que recuerden. Solo entonces, al despertar, la flor florecerá. Las palabras se disuelven lentamente, como si fueran absorbidas por el papel.",
+                    "healthRestore": 0,
+                    "fatigueReduction": 0,
+                    "useMessage": "",
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "read_loto_book",
+                    "eventToTriggerOnCollect": ""
                 },
                 {
                     "itemId": "food_bread",
@@ -123,23 +157,6 @@
                     "requiredFlag": "",
                     "flagToSetOnCollect": "",
                     "eventToTriggerOnCollect": ""
-                },
-                {
-                    "itemId": "readable_diary",
-                    "itemName": "Diario",
-                    "itemType": 3,
-                    "isVisible": false,
-                    "isCollected": false,
-                    "shortDescription": "Un diario viejo y polvoriento",
-                    "longDescription": "El diario de la familia que vivió aquí. Las últimas entradas hablan de extraños sucesos: susurros en la noche, sombras que se mueven solas...",
-                    "healthRestore": 0,
-                    "fatigueReduction": 0,
-                    "useMessage": "",
-                    "failMessage": "",
-                    "requiredItemId": -1,
-                    "requiredFlag": "child_event_triggered",
-                    "flagToSetOnCollect": "read_family_diary",
-                    "eventToTriggerOnCollect": "Leíste el Diario"
                 }
             ]
         },
@@ -147,6 +164,23 @@
             "roomId": "room_5",
             "availableActions": ["inspeccionar", "tomar", "buscar"],
             "items": [
+                {
+                    "itemId": "food_canned",
+                    "itemName": "Lata de comida",
+                    "itemType": 1,
+                    "isVisible": false,
+                    "isCollected": false,
+                    "shortDescription": "Una lata sellada entre trapos húmedos",
+                    "longDescription": "Una lata sellada de comida encontrada entre trapos húmedos en los cajones. Cuando la tomas, una risa breve, femenina, se escucha cerca de tu oído: Siempre servía para cuatro.",
+                    "healthRestore": 2,
+                    "fatigueReduction": 2,
+                    "useMessage": "Comiste el contenido de la lata",
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "",
+                    "eventToTriggerOnCollect": "Screamer Cocina"
+                },
                 {
                     "itemId": "food_water",
                     "itemName": "Agua",
@@ -163,6 +197,86 @@
                     "requiredFlag": "",
                     "flagToSetOnCollect": "",
                     "eventToTriggerOnCollect": ""
+                }
+            ]
+        },
+        {
+            "roomId": "room_7",
+            "availableActions": ["inspeccionar", "tomar", "leer", "buscar"],
+            "items": [
+                {
+                    "itemId": "letter_lotus_seal",
+                    "itemName": "Carta con sello de loto",
+                    "itemType": 3,
+                    "isVisible": true,
+                    "isCollected": false,
+                    "shortDescription": "Un sobre sellado con cera y una flor de loto grabada",
+                    "longDescription": "Mi hijo duerme, y no hay plegaria que lo despierte. Su madre no soportó el silencio y buscó las aguas, dejándome solo con el eco de su nombre. He enviado lejos al gemelo que aún respira. Esta noche beberé del veneno que florece en Egipto. Que el beso del loto me lleve con ellos una vez escuche: Renacer.",
+                    "healthRestore": 0,
+                    "fatigueReduction": 0,
+                    "useMessage": "",
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "read_father_letter",
+                    "eventToTriggerOnCollect": ""
+                },
+                {
+                    "itemId": "lotus_flower_dead",
+                    "itemName": "Flor de loto marchita",
+                    "itemType": 4,
+                    "isVisible": true,
+                    "isCollected": false,
+                    "shortDescription": "Una flor de loto seca sobre la mesa",
+                    "longDescription": "El tallo está seco, el aire huele a ceniza. Los pétalos ennegrecidos se curvan hacia adentro, como si hubieran querido proteger algo que ya no existe.",
+                    "healthRestore": 0,
+                    "fatigueReduction": 0,
+                    "useMessage": "",
+                    "failMessage": "No puedes tomar la flor aún. Está completamente seca.",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "",
+                    "eventToTriggerOnCollect": ""
+                },
+                {
+                    "itemId": "lotus_flower_alive",
+                    "itemName": "Flor de loto viva",
+                    "itemType": 4,
+                    "isVisible": false,
+                    "isCollected": false,
+                    "shortDescription": "Una flor de loto que irradia un brillo pálido",
+                    "longDescription": "La flor de loto irradia un brillo pálido, como si respirara. Sus pétalos están limpios, firmes, suaves, y en su centro parece latir una luz débil, un corazón que no termina de apagarse. Esta flor es especial, un regalo que trae purificación.",
+                    "healthRestore": 0,
+                    "fatigueReduction": 0,
+                    "useMessage": "",
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "lotus_flower_activated",
+                    "flagToSetOnCollect": "has_lotus_flower",
+                    "eventToTriggerOnCollect": ""
+                }
+            ]
+        },
+        {
+            "roomId": "room_9",
+            "availableActions": ["inspeccionar", "tomar", "buscar"],
+            "items": [
+                {
+                    "itemId": "toy_bear",
+                    "itemName": "Oso de peluche",
+                    "itemType": 0,
+                    "isVisible": true,
+                    "isCollected": false,
+                    "shortDescription": "Un viejo oso de peluche sobre la cama",
+                    "longDescription": "Un oso de peluche desgastado por los años. Uno de sus ojos de botón está suelto y cuelga de un hilo. Tiene algo escrito en la etiqueta del cuello: Para mi pequeña. Siempre te protegeré. Papá.",
+                    "healthRestore": 0,
+                    "fatigueReduction": 0,
+                    "useMessage": "",
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "found_teddy_bear",
+                    "eventToTriggerOnCollect": "Encontraste el Oso de Peluche"
                 }
             ]
         }

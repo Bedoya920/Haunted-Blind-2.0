@@ -11,7 +11,11 @@
                 "x": 0,
                 "y": 0
             },
-            "objetosEnHabitacion": []
+            "objetosEnHabitacion": [],
+            "narrationFirstEntry": "En el hall principal el aire es espeso, pesado, como si la casa llevara demasiado tiempo conteniendo la respiración. El suelo cruje bajo tus pies y, al fondo, el reloj marca eternamente las 2:00 a.m. Su tic tac no avanza, repite el mismo sonido una y otra vez. El eco parece acompañarte desde lo alto de las escaleras, como si alguien invisible observara tus movimientos. A cada paso, el reloj suena más cerca, aunque no te hayas movido.",
+            "narrationShort": "En el hall principal te acercas al reloj. La manecilla vibra, intentando avanzar, pero algo la retiene en las 2 de la madrugada. El tiempo avanza sólo cuando no lo miras.",
+            "narrationAfterEvent": "",
+            "hasBeenVisited": false
         },
         {
             "id": 2,
@@ -23,7 +27,11 @@
                 "x": 1,
                 "y": 0
             },
-            "objetosEnHabitacion": []
+            "objetosEnHabitacion": [],
+            "narrationFirstEntry": "Entras a la sala principal. Es amplia pero no lo suficiente, el polvo cubre la tela de viejos sofás y la atmósfera se vuelve densa. El piano al fondo tiene las teclas amarillentas, y cada tanto una nota vibra por sí sola. Frente a ti, un retrato familiar: el padre, rígido y serio, con un reloj de bolsillo abierto; la madre, serena, sostiene un ramo de flores de loto; y entre ellos, los gemelos, uno sonríe, el otro mira al suelo, abrazando un oso rojo de peluche.",
+            "narrationShort": "Sala principal polvorienta, densa y amplia. El piano vibra solo ocasionalmente.",
+            "narrationAfterEvent": "Regresas a la sala principal, pero algo en el aire ha cambiado. El polvo ya no cubre los muebles; parece suspendido, flotando como si el tiempo mismo respirara. El retrato familiar es distinto. La madre ya no sostiene las flores de loto, y en su lugar, de sus manos abiertas gotea una línea oscura que se extiende hasta el suelo. El padre mira directamente hacia ti, y el niño que sostenía el oso ahora parece ausente, como si hubiera salido del cuadro. Al fondo, el reloj suena de nuevo, un tic tac irregular, como un corazón roto.",
+            "hasBeenVisited": false
         },
         {
             "id": 3,
@@ -35,7 +43,11 @@
                 "x": 2,
                 "y": 0
             },
-            "objetosEnHabitacion": []
+            "objetosEnHabitacion": [],
+            "narrationFirstEntry": "La puerta de la Biblioteca se abre con un lamento seco. Un olor a humedad, cuero viejo y polvo te envuelve. Las ventanas están cubiertas con cortinas gruesas que no dejan pasar la luz, apenas un hilo pálido se filtra desde la parte superior, iluminando partículas flotantes en el aire. El silencio aquí no es vacío; parece lleno de murmullos apagados, como si las páginas aún conservaran la voz de quien las escribió.",
+            "narrationShort": "El aire está espeso. La biblioteca te recibe con su silencio pesado. El aire huele a papel húmedo y madera vieja. Algo parece haberse movido entre los estantes, aunque todo está quieto.",
+            "narrationAfterEvent": "Cuando vuelves a la biblioteca, el aire parece más denso, casi irrespirable. Las páginas de los libros tiemblan con un murmullo bajo, como si las voces dentro discutieran entre sí. Los sellos en las portadas están calientes al tacto, y un par de libros caen por su cuenta desde los estantes. Algo invisible camina entre los pasillos, rozando las cubiertas con suavidad. Quizás esté buscando quién leyó demasiado.",
+            "hasBeenVisited": false
         },
         {
             "id": 4,
@@ -47,7 +59,11 @@
                 "x": 0,
                 "y": 1
             },
-            "objetosEnHabitacion": []
+            "objetosEnHabitacion": [],
+            "narrationFirstEntry": "El comedor se abre ante ti con una mesa larga cubierta por un mantel que alguna vez fue blanco. Los cubiertos están perfectamente dispuestos, pero cada plato está vacío, salvo por un anillo de humedad que parece reciente. Una lámpara de cristal cuelga sobre la mesa, balanceándose con un leve chirrido, aunque el aire está quieto. A un lado, una silla está retirada, como si alguien se hubiera levantado de prisa y al pie de la silla, migajas. El silencio aquí tiene peso; huele a hierro, a sopa rancia y algo más, dulzón.",
+            "narrationShort": "El comedor huele a comida y las sillas parecen girarse hacia donde caminas, te observan; el mantel tiembla apenas cuando pasas pero el candelabro tintinea.",
+            "narrationAfterEvent": "El comedor ha cambiado. Los platos ya no están vacíos: hay restos de comida en descomposición, moscas que zumban en la penumbra. La lámpara parpadea, y las sillas se han movido; todas miran hacia ti. En la cabecera de la mesa, un plato limpio, cubierto por una servilleta roja.",
+            "hasBeenVisited": false
         },
         {
             "id": 5,
@@ -59,7 +75,11 @@
                 "x": 0,
                 "y": 2
             },
-            "objetosEnHabitacion": []
+            "objetosEnHabitacion": [],
+            "narrationFirstEntry": "El olor es lo primero que te golpea: humedad, óxido y grasa rancia. Las ollas aún cuelgan sobre la estufa, cubiertas de una capa negra que brilla con el reflejo tenue de la linterna. El fregadero está lleno de agua turbia y utensilios viejos; cada tanto, una burbuja asciende y revienta con un sonido hueco.",
+            "narrationShort": "El aire en la cocina es irrespirable. Agua del fregadero gotea y se escuchan ollas invisibles chirriar con humeante comida que destila putrefacción.",
+            "narrationAfterEvent": "",
+            "hasBeenVisited": false
         },
         {
             "id": 6,
@@ -71,7 +91,11 @@
                 "x": 0,
                 "y": 3
             },
-            "objetosEnHabitacion": []
+            "objetosEnHabitacion": [],
+            "narrationFirstEntry": "En el baño el aire es frío, más que en el resto de la casa. La puerta chirría al abrirse y un olor metálico se mezcla con el del moho. El espejo, completamente empañado, refleja solo una sombra borrosa: tú. Una bañera al fondo, llena hasta la mitad con un agua estancada, oscura e inmóvil. Se escuchan gotas, pero dónde.",
+            "narrationShort": "La bañera conserva la huella húmeda de un cuerpo recostado. El espejo, agrietado, no refleja tu figura; solo una sombra que parpadea detrás de ti antes de desvanecerse en el silencio.",
+            "narrationAfterEvent": "",
+            "hasBeenVisited": false
         },
         {
             "id": 7,
@@ -83,7 +107,27 @@
                 "x": 0,
                 "y": 4
             },
-            "objetosEnHabitacion": []
+            "objetosEnHabitacion": [],
+            "narrationFirstEntry": "Empujas la puerta de la habitación principal y un olor tenue a madera vieja y perfume marchito llena el aire. La habitación es amplia, con una cama de dosel cubriéndose de polvo, las cortinas pesadas cayendo como velos de luto. Frente a la cama, un espejo ovalado refleja una imagen que tarda en parecer tuya. En un escritorio descansa una flor de loto marchita. Sus pétalos ennegrecidos se curvan hacia adentro, secos, quebradizos, como si hubieran querido proteger algo que ya no existe.",
+            "narrationShort": "El aire conserva el aroma del loto. La flor parece más viva que la casa misma. El espejo refleja un par de sombras donde no hay nadie.",
+            "narrationAfterEvent": "Vuelves a la habitación y el aire ha cambiado: ya no hay olor a polvo, sino a tierra húmeda y flores recién abiertas. La flor de loto, antes seca, ahora irradia un brillo pálido, como si respirara. Sus pétalos están limpios, firmes, suaves, y en su centro parece latir una luz débil, un corazón que no termina de apagarse.",
+            "hasBeenVisited": false
+        },
+        {
+            "id": 9,
+            "nombre": "Habitación de los Niños",
+            "descripLarga": "Entras a la habitación de los niños. El aire huele a polvo y juguetes olvidados. Tus pies pisan sobre algo suave, quizás peluches tirados en el suelo. Escuchas el crujido de una cama pequeña y el tintineo de una caja de música que suena sola, repitiendo una melodía infantil distorsionada. Las paredes están frías. Hay dibujos colgados que puedes sentir bajo tus dedos: trazos irregulares, como hechos con urgencia.",
+            "descripCorta": "La habitación de los niños. Huele a juguetes viejos y suena una caja de música distorsionada.",
+            "puertas": 2,
+            "posicion": {
+                "x": 0,
+                "y": 5
+            },
+            "objetosEnHabitacion": [],
+            "narrationFirstEntry": "Empujas la puerta con suavidad. Un leve olor a madera húmeda y polvo te recibe, mezclado con el perfume añejo de algo que alguna vez fue infancia. Juguetes regados, una caja musical y dos camas pequeñas, perfectamente paralelas, aún conservan la forma de cuerpos diminutos que ya no están. El papel tapiz muestra dibujos hechos con crayones: una madre de flores blancas, un padre con un reloj brillante y dos niños que se toman de la mano frente a una casa. Pero una de las figuras ha sido borrada con trazos negros, como si alguien hubiera intentado arrancarla del recuerdo.",
+            "narrationShort": "La habitación de los niños. La caja musical sigue sonando con su melodía quebrada. Los dibujos en la pared parecen moverse cuando no los miras.",
+            "narrationAfterEvent": "Vuelves a la habitación de los niños. La caja musical gira más rápido ahora, con notas que se rompen y retuercen. El aire es denso, y escuchas una respiración pequeña, como si el niño estuviera aquí, esperando.",
+            "hasBeenVisited": false
         },
         {
             "id": 8,
@@ -93,21 +137,13 @@
             "puertas": 2,
             "posicion": {
                 "x": 0,
-                "y": 5
-            },
-            "objetosEnHabitacion": []
-        },
-        {
-            "id": 9,
-            "nombre": "Habitación de los Niños",
-            "descripLarga": "Entras a la habitación de los niños. El aire huele a polvo y juguetes olvidados. Tus pies pisan sobre algo suave, quizás peluches tirados en el suelo. Escuchas el crujido de una cama pequeña y el tintineo de una caja de música que suena sola, repitiendo una melodía infantil distorsionada. Las paredes están frías. Hay dibujos colgados que puedes sentir bajo tus dedos: trazos irregulares, como hechos con urgencia.",
-            "descripCorta": "La habitación de los niños. Huele a juguetes viejos y suena una caja de música distorsionada.",
-            "puertas": 1,
-            "posicion": {
-                "x": 0,
                 "y": 6
             },
-            "objetosEnHabitacion": []
+            "objetosEnHabitacion": [],
+            "narrationFirstEntry": "Llegas al final del pasillo. La puerta del sótano se alza frente a ti: madera gruesa, húmeda, con un cerrojo oxidado que parece latir al ritmo del reloj de la casa. Del otro lado se escucha un leve murmullo, como si alguien respirara muy cerca, apenas contenido por la madera. No hay luz, salvo una rendija diminuta por la que pasa un hilo de aire frío que huele a tierra mojada, como de cementerio. El suelo vibra, débilmente, con cada tic del reloj.",
+            "narrationShort": "La puerta sigue ahí. El aire se inunda de un fuerte olor de flores y tierra de cementerio, y un hilo de podredumbre. El tic tac del reloj proviene desde abajo, constante, recordando que el tiempo en esta casa ya no le pertenece.",
+            "narrationAfterEvent": "",
+            "hasBeenVisited": false
         }
     ],
     "habitacionInicial": {
@@ -129,7 +165,8 @@
                 "x": 1,
                 "y": 0
             },
-            "descripcionPuerta": ""
+            "descripcionPuerta": "",
+            "timeToUnlock": -1.0
         },
         {
             "id": 2,
@@ -145,7 +182,8 @@
                 "x": 2,
                 "y": 0
             },
-            "descripcionPuerta": ""
+            "descripcionPuerta": "",
+            "timeToUnlock": -1.0
         },
         {
             "id": 3,
@@ -161,7 +199,8 @@
                 "x": 0,
                 "y": 1
             },
-            "descripcionPuerta": ""
+            "descripcionPuerta": "",
+            "timeToUnlock": -1.0
         },
         {
             "id": 4,
@@ -177,7 +216,8 @@
                 "x": 0,
                 "y": 2
             },
-            "descripcionPuerta": ""
+            "descripcionPuerta": "",
+            "timeToUnlock": -1.0
         },
         {
             "id": 5,
@@ -193,7 +233,8 @@
                 "x": 0,
                 "y": 3
             },
-            "descripcionPuerta": ""
+            "descripcionPuerta": "",
+            "timeToUnlock": -1.0
         },
         {
             "id": 6,
@@ -209,7 +250,8 @@
                 "x": 0,
                 "y": 4
             },
-            "descripcionPuerta": ""
+            "descripcionPuerta": "",
+            "timeToUnlock": -1.0
         },
         {
             "id": 7,
@@ -225,13 +267,14 @@
                 "x": 0,
                 "y": 5
             },
-            "descripcionPuerta": ""
+            "descripcionPuerta": "",
+            "timeToUnlock": -1.0
         },
         {
             "id": 8,
-            "abierta": true,
+            "abierta": false,
             "variableNecesaria": 0,
-            "mensajeBloqueada": "",
+            "mensajeBloqueada": "La puerta está cerrada con llave. Algo te dice que debes esperar a que el reloj marque las 2 AM.",
             "mensajeAbrir": "",
             "cuarto1": {
                 "x": 0,
@@ -241,7 +284,8 @@
                 "x": 0,
                 "y": 6
             },
-            "descripcionPuerta": ""
+            "descripcionPuerta": "",
+            "timeToUnlock": -1.0
         }
     ]
 }

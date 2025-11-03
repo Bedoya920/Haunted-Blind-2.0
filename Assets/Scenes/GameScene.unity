@@ -218,6 +218,10 @@ MonoBehaviour:
       puertas: 2
       posicion: {x: 0, y: 0}
       objetosEnHabitacion: []
+      narrationFirstEntry: 
+      narrationShort: 
+      narrationAfterEvent: 
+      hasBeenVisited: 0
     - id: 2
       nombre: Sala
       descripLarga: "Una habitaci\xF3n amplia y polvorienta. Hueles a madera vieja
@@ -230,6 +234,10 @@ MonoBehaviour:
       puertas: 2
       posicion: {x: 1, y: 0}
       objetosEnHabitacion: []
+      narrationFirstEntry: 
+      narrationShort: 
+      narrationAfterEvent: 
+      hasBeenVisited: 0
     - id: 3
       nombre: Biblioteca
       descripLarga: "Una habitaci\xF3n llena de libros antiguos. El aire huele a
@@ -242,6 +250,10 @@ MonoBehaviour:
       puertas: 1
       posicion: {x: 2, y: 0}
       objetosEnHabitacion: []
+      narrationFirstEntry: 
+      narrationShort: 
+      narrationAfterEvent: 
+      hasBeenVisited: 0
     - id: 4
       nombre: Comedor
       descripLarga: "Una mesa larga domina el centro de la habitaci\xF3n. Tus manos
@@ -254,6 +266,10 @@ MonoBehaviour:
       puertas: 2
       posicion: {x: 0, y: 1}
       objetosEnHabitacion: []
+      narrationFirstEntry: 
+      narrationShort: 
+      narrationAfterEvent: 
+      hasBeenVisited: 0
     - id: 5
       nombre: Cocina
       descripLarga: "La cocina est\xE1 fr\xEDa. Tus pasos resuenan sobre las baldosas
@@ -267,6 +283,10 @@ MonoBehaviour:
       puertas: 2
       posicion: {x: 0, y: 2}
       objetosEnHabitacion: []
+      narrationFirstEntry: 
+      narrationShort: 
+      narrationAfterEvent: 
+      hasBeenVisited: 0
     - id: 6
       nombre: "Ba\xF1o"
       descripLarga: "El ba\xF1o es peque\xF1o y claustrof\xF3bico. El aire est\xE1
@@ -279,6 +299,10 @@ MonoBehaviour:
       puertas: 2
       posicion: {x: 0, y: 3}
       objetosEnHabitacion: []
+      narrationFirstEntry: 
+      narrationShort: 
+      narrationAfterEvent: 
+      hasBeenVisited: 0
     - id: 7
       nombre: "Habitaci\xF3n Principal"
       descripLarga: "La habitaci\xF3n principal. El aire es pesado, casi sofocante.
@@ -292,6 +316,10 @@ MonoBehaviour:
       puertas: 2
       posicion: {x: 0, y: 4}
       objetosEnHabitacion: []
+      narrationFirstEntry: 
+      narrationShort: 
+      narrationAfterEvent: 
+      hasBeenVisited: 0
     - id: 8
       nombre: "S\xF3tano"
       descripLarga: "Desciendes al s\xF3tano. El aire es denso, h\xFAmedo y huele
@@ -305,6 +333,10 @@ MonoBehaviour:
       puertas: 2
       posicion: {x: 0, y: 5}
       objetosEnHabitacion: []
+      narrationFirstEntry: 
+      narrationShort: 
+      narrationAfterEvent: 
+      hasBeenVisited: 0
     - id: 9
       nombre: "Habitaci\xF3n de los Ni\xF1os"
       descripLarga: "Entras a la habitaci\xF3n de los ni\xF1os. El aire huele a polvo
@@ -318,6 +350,10 @@ MonoBehaviour:
       puertas: 1
       posicion: {x: 0, y: 6}
       objetosEnHabitacion: []
+      narrationFirstEntry: 
+      narrationShort: 
+      narrationAfterEvent: 
+      hasBeenVisited: 0
     habitacionInicial: {x: 0, y: 0}
     puertas:
     - id: 1
@@ -328,6 +364,7 @@ MonoBehaviour:
       cuarto1: {x: 0, y: 0}
       cuarto2: {x: 1, y: 0}
       descripcionPuerta: 
+      timeToUnlock: -1
     - id: 2
       abierta: 1
       variableNecesaria: 0
@@ -336,6 +373,7 @@ MonoBehaviour:
       cuarto1: {x: 1, y: 0}
       cuarto2: {x: 2, y: 0}
       descripcionPuerta: 
+      timeToUnlock: -1
     - id: 3
       abierta: 1
       variableNecesaria: 0
@@ -344,6 +382,7 @@ MonoBehaviour:
       cuarto1: {x: 0, y: 0}
       cuarto2: {x: 0, y: 1}
       descripcionPuerta: 
+      timeToUnlock: -1
     - id: 4
       abierta: 1
       variableNecesaria: 0
@@ -352,6 +391,7 @@ MonoBehaviour:
       cuarto1: {x: 0, y: 1}
       cuarto2: {x: 0, y: 2}
       descripcionPuerta: 
+      timeToUnlock: -1
     - id: 5
       abierta: 1
       variableNecesaria: 0
@@ -360,6 +400,7 @@ MonoBehaviour:
       cuarto1: {x: 0, y: 2}
       cuarto2: {x: 0, y: 3}
       descripcionPuerta: 
+      timeToUnlock: -1
     - id: 6
       abierta: 1
       variableNecesaria: 0
@@ -368,6 +409,7 @@ MonoBehaviour:
       cuarto1: {x: 0, y: 3}
       cuarto2: {x: 0, y: 4}
       descripcionPuerta: 
+      timeToUnlock: -1
     - id: 7
       abierta: 1
       variableNecesaria: 0
@@ -376,6 +418,7 @@ MonoBehaviour:
       cuarto1: {x: 0, y: 4}
       cuarto2: {x: 0, y: 5}
       descripcionPuerta: 
+      timeToUnlock: -1
     - id: 8
       abierta: 1
       variableNecesaria: 0
@@ -384,6 +427,7 @@ MonoBehaviour:
       cuarto1: {x: 0, y: 5}
       cuarto2: {x: 0, y: 6}
       descripcionPuerta: 
+      timeToUnlock: -1
   mapFileName: houseData.json
 --- !u!114 &176073504
 MonoBehaviour:
@@ -534,13 +578,17 @@ MonoBehaviour:
   roomGenerator: {fileID: 176073503}
   roomBridge: {fileID: 0}
   cellSize: 40
+  cellSpacing: 4
+  doorSize: 12
   mapOffsetX: 300
   mapOffsetY: 137
+  backgroundColor: {r: 0.18, g: 0.18, b: 0.22, a: 1}
   emptyColor: {r: 0, g: 0, b: 0, a: 1}
   roomColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
-  goalColor: {r: 0, g: 1, b: 0, a: 1}
+  initialRoomColor: {r: 0.5, g: 0.85, b: 0.5, a: 1}
+  currentRoomColor: {r: 0.4, g: 0.75, b: 0.4, a: 1}
   doorColor: {r: 0, g: 1, b: 1, a: 1}
-  playerColor: {r: 1, g: 1, b: 1, a: 1}
+  playerTextColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
 --- !u!1 &577722744
 GameObject:
   m_ObjectHideFlags: 0

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84c9bf8d71da1c44f9708e2f580769b1, type: 3}
   m_Name: TimerData
   m_EditorClassIdentifier: 
-  totalDuration: 20
-  interval: 5
-  currentTime: 292.5851
-  isRunning: 1
+  totalDuration: 360
+  interval: 30
+  currentTime: 0
+  isRunning: 0

@@ -53,6 +53,12 @@ public class Room
     // NUEVOS CAMPOS (opcionales, pueden estar vacíos)
     [Header("Voice System Integration (Opcional)")]
     public List<string> objetosEnHabitacion = new List<string>(); // Para sistema de voz
+    
+    [Header("Narraciones Extendidas del GDD")]
+    public string narrationFirstEntry = "";  // Narración larga primera entrada
+    public string narrationShort = "";       // Narración corta reentradas
+    public string narrationAfterEvent = "";  // Narración tras evento del niño
+    public bool hasBeenVisited = false;      // Track si ya visitó esta habitación
 
     public Room()
     {

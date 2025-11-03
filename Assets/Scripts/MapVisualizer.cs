@@ -79,7 +79,7 @@ public class MapVisualizer : MonoBehaviour
         }
         
         // Verificar que el bridge también está listo
-        if (roomBridge == null || roomBridge.currentPlayerPosition == Vector2Int.zero)
+        if (roomBridge == null || !roomBridge.isFullyInitialized)
         {
             GUI.Label(new Rect(10, 10, 300, 20), "Inicializando sistemas...");
             return;

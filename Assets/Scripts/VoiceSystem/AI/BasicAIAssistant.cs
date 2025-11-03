@@ -124,6 +124,11 @@ namespace VoiceSystem.AI
                 {"comer", "Comes algo para recuperar energía. [CMD:comer]"},
                 {"dar", "Das algo. [CMD:dar]"},
                 
+                // Time commands
+                {"hora", "Revisas la hora. [CMD:hora]"},
+                {"tiempo", "Revisas el tiempo. [CMD:tiempo]"},
+                {"reloj", "Miras el reloj. [CMD:reloj]"},
+                
                 // Item actions
                 {"buscar", "Buscas cuidadosamente en la habitación. [CMD:buscar]"},
                 
@@ -228,6 +233,12 @@ namespace VoiceSystem.AI
         private string GenerateResponse(string userInput, GameContext context)
         {
             string lowerInput = userInput.ToLower().Trim();
+            
+            // Special case: "qué hora es" or "que hora es" -> map to "hora" command
+            if (lowerInput.Contains("qué hora") || lowerInput.Contains("que hora"))
+            {
+                return "Revisas la hora. [CMD:hora]";
+            }
             
             // Check for exact matches first
             if (responseRules.ContainsKey(lowerInput))

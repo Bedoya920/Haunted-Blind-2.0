@@ -27,8 +27,8 @@ namespace VoiceSystem.Core.Data
         public int maxHealth = 5;
         public int fatigue = 0;
         public int maxFatigue = 25;
-        public int actions = 10;
-        public int maxActions = 10;
+        public int actions = 9999; // INFINITAS - GDD no especifica límite
+        public int maxActions = 9999;
         
         [Header("Inventory")]
         public List<string> inventory = new List<string>();

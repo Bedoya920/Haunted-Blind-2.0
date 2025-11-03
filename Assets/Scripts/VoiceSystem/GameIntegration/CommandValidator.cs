@@ -308,6 +308,9 @@ namespace VoiceSystem.GameIntegration
             // Always valid
             validCommands.Add("información");
             validCommands.Add("ayuda");
+            validCommands.Add("hora");
+            validCommands.Add("tiempo");
+            validCommands.Add("reloj");
             
             // Movement - check each direction
             if (CanMoveDirection("adelante", out _)) validCommands.Add("adelante");

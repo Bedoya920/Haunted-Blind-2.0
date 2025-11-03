@@ -59,6 +59,14 @@ public class GameInitializer : MonoBehaviour
             Debug.Log("[GameInit] GameTimer iniciado");
         }
         
+        // 6.5. Inicializar sistema de campanadas
+        if (FindFirstObjectByType<HourlyBellSystem>() == null)
+        {
+            var bellSystemObj = new GameObject("HourlyBellSystem");
+            bellSystemObj.AddComponent<HourlyBellSystem>();
+            Debug.Log("[GameInit] HourlyBellSystem inicializado");
+        }
+        
         // 7. Activar reconocimiento de voz
         yield return new WaitForSeconds(1f);
         var voiceSystem = VoiceSystemManager.Instance;
