@@ -243,6 +243,29 @@ public class PlayerStateManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Verifica si un flag de evento está marcado
+    /// </summary>
+    public bool HasSeenEvent(string eventFlag)
+    {
+        if (playerData != null)
+        {
+            return playerData.HasSeenEvent(eventFlag);
+        }
+        return false;
+    }
+    
+    /// <summary>
+    /// Marca un flag de evento
+    /// </summary>
+    public void SetEventFlag(string eventFlag)
+    {
+        if (playerData != null)
+        {
+            playerData.SetEventFlag(eventFlag, true);
+        }
+    }
+    
+    /// <summary>
     /// Obtiene resumen del estado del jugador
     /// </summary>
     public string GetStateSummary()

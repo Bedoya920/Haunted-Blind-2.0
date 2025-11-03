@@ -155,39 +155,186 @@ namespace VoiceSystem.GameIntegration
         }
         
         /// <summary>
-        /// Tomar item de habitación
+        /// Inspecciona un item sin recogerlo (solo lee descripción)
         /// </summary>
-        public bool TryTakeItem(string roomId, string itemId, out RoomItem item)
+        public bool TryInspectItem(string roomId, string itemId, out RoomItem item, out string description)
         {
             item = null;
+            description = "";
             var inventory = GetRoomInventory(roomId);
             
             item = inventory.GetItemById(itemId);
             if (item == null)
             {
+                description = $"No hay ningún {itemId} aquí";
+                LogDebug($"[RoomInventory] Item {itemId} no encontrado en {roomId} para inspeccionar");
+                return false;
+            }
+            
+            // Verificar si es visible
+            if (!item.isVisible)
+            {
+                description = "No ves nada especial aquí";
+                LogDebug($"[RoomInventory] Item {itemId} no visible para inspeccionar");
+                return false;
+            }
+            
+            // Si ya fue recogido, indicarlo
+            if (item.isCollected)
+            {
+                description = $"Ya recogiste {item.itemName}";
+                LogDebug($"[RoomInventory] Item {itemId} ya recogido");
+                return false;
+            }
+            
+            // Retornar descripción del objeto (usar longDescription si existe)
+            description = !string.IsNullOrEmpty(item.longDescription) 
+                ? item.longDescription 
+                : (!string.IsNullOrEmpty(item.shortDescription) 
+                    ? item.shortDescription 
+                    : $"Ves {item.itemName}. Parece que podrías recogerlo");
+            
+            LogDebug($"[RoomInventory] ✅ Inspeccionado {itemId}: {description}");
+            return true;
+        }
+        
+        /// <summary>
+        /// Tomar item de habitación con verificación de requisitos
+        /// </summary>
+        public bool TryTakeItem(string roomId, string itemId, out RoomItem item, out string failReason)
+        {
+            item = null;
+            failReason = "";
+            var inventory = GetRoomInventory(roomId);
+            
+            item = inventory.GetItemById(itemId);
+            if (item == null)
+            {
+                failReason = $"No se encontró {itemId} en esta habitación";
                 LogDebug($"[RoomInventory] Item {itemId} no encontrado en {roomId}");
                 return false;
             }
             
             if (!item.CanBeCollected())
             {
+                failReason = item.isCollected ? "Ya recogiste este objeto" : "Este objeto no está visible aún";
                 LogDebug($"[RoomInventory] Item {itemId} no puede ser recogido (visible:{item.isVisible}, collected:{item.isCollected})");
                 return false;
+            }
+            
+            // Obtener PlayerStateManager una sola vez
+            var playerState = PlayerStateManager.Instance;
+            
+            // NUEVO: Verificar requiredFlag
+            if (!string.IsNullOrEmpty(item.requiredFlag))
+            {
+                if (playerState != null && !playerState.HasSeenEvent(item.requiredFlag))
+                {
+                    failReason = !string.IsNullOrEmpty(item.failMessage) 
+                        ? item.failMessage 
+                        : "Aún no puedes tomar este objeto";
+                    LogDebug($"[RoomInventory] Item {itemId} requiere flag '{item.requiredFlag}' que el jugador no tiene");
+                    return false;
+                }
+            }
+            
+            // NUEVO: Verificar requiredItemId
+            if (item.requiredItemId != -1)
+            {
+                string requiredItemIdStr = "item_" + item.requiredItemId;
+                
+                if (playerState != null && !playerState.HasItem(requiredItemIdStr))
+                {
+                    failReason = !string.IsNullOrEmpty(item.failMessage)
+                        ? item.failMessage
+                        : $"Necesitas otro objeto para tomar {item.itemName}";
+                    LogDebug($"[RoomInventory] Item {itemId} requiere objeto ID:{item.requiredItemId} que el jugador no tiene");
+                    return false;
+                }
             }
             
             // Marcar como recogido
             item.isCollected = true;
             
-            // Añadir a PlayerStateManager (sincroniza PlayerData + GameContext)
-            var playerState = PlayerStateManager.Instance;
+            // Añadir al inventario del jugador
             if (playerState != null)
             {
                 playerState.AddItem(itemId);
+                
+                // NUEVO: Marcar flag si existe
+                if (!string.IsNullOrEmpty(item.flagToSetOnCollect))
+                {
+                    playerState.SetEventFlag(item.flagToSetOnCollect);
+                    LogDebug($"[RoomInventory] ✅ Flag marcado: {item.flagToSetOnCollect}");
+                }
+            }
+            
+            // NUEVO: Disparar evento al recoger
+            if (!string.IsNullOrEmpty(item.eventToTriggerOnCollect))
+            {
+                TriggerCollectionEvent(item);
+            }
+            
+            // NUEVO: Si es llave, desbloquear puerta automáticamente
+            if (item.IsKey())
+            {
+                UnlockDoorWithKey(item);
             }
             
             LogDebug($"[RoomInventory] ✅ Item recogido: {item.itemName} de {roomId} → Añadido al inventario persistente");
             
             return true;
+        }
+        
+        /// <summary>
+        /// Dispara evento cuando se recoge un objeto
+        /// </summary>
+        private void TriggerCollectionEvent(RoomItem item)
+        {
+            var eventManager = EventManager.Instance;
+            if (eventManager == null)
+            {
+                Debug.LogWarning("[RoomInventory] EventManager no disponible para disparar evento de recolección");
+                return;
+            }
+            
+            // Buscar evento por nombre
+            var evt = eventManager.GetEventByName(item.eventToTriggerOnCollect);
+            if (evt != null)
+            {
+                eventManager.NarrateEvent(evt);
+                LogDebug($"[RoomInventory] 🎬 Evento disparado: {item.eventToTriggerOnCollect}");
+            }
+            else
+            {
+                Debug.LogWarning($"[RoomInventory] Evento '{item.eventToTriggerOnCollect}' no encontrado");
+            }
+        }
+        
+        /// <summary>
+        /// Desbloquea puerta automáticamente al recoger llave
+        /// </summary>
+        private void UnlockDoorWithKey(RoomItem keyItem)
+        {
+            // Extraer ID numérico de la llave (ej: "key_100" -> 100)
+            if (!keyItem.itemId.StartsWith("key_"))
+            {
+                Debug.LogWarning($"[RoomInventory] Item {keyItem.itemId} es tipo Key pero no tiene formato 'key_XXX'");
+                return;
+            }
+            
+            if (!int.TryParse(keyItem.itemId.Substring(4), out int keyId))
+            {
+                Debug.LogWarning($"[RoomInventory] No se pudo extraer ID numérico de {keyItem.itemId}");
+                return;
+            }
+            
+            var roomBridge = RoomSystemBridge.Instance;
+            if (roomBridge != null)
+            {
+                roomBridge.UnlockDoorWithKeyId(keyId);
+                LogDebug($"[RoomInventory] 🔓 Puerta desbloqueada con llave ID:{keyId}");
+            }
         }
         
         /// <summary>

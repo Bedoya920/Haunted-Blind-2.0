@@ -1,7 +1,30 @@
 {
     "roomInventories": [
         {
-            "roomId": "room_sala",
+            "roomId": "room_1",
+            "availableActions": ["inspeccionar", "leer", "buscar"],
+            "items": [
+                {
+                    "itemId": "readable_diary_hall",
+                    "itemName": "Diario antiguo",
+                    "itemType": 3,
+                    "isVisible": true,
+                    "isCollected": false,
+                    "shortDescription": "Un diario polvoriento en el suelo",
+                    "longDescription": "Un diario viejo con páginas amarillentas. La última entrada dice: Algo no está bien en esta casa. Las puertas se cierran solas por la noche, y escucho pasos en los pasillos vacíos. He intentado irme, pero algo me retiene aquí. Debo encontrar la llave del sótano antes de que sea demasiado tarde. Creo que la respuesta está allí abajo.",
+                    "healthRestore": 0,
+                    "fatigueReduction": 0,
+                    "useMessage": "",
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "hall_explored",
+                    "eventToTriggerOnCollect": "Leíste el Diario del Hall"
+                }
+            ]
+        },
+        {
+            "roomId": "room_2",
             "availableActions": ["inspeccionar", "tomar", "buscar"],
             "items": [
                 {
@@ -15,7 +38,11 @@
                     "healthRestore": 0,
                     "fatigueReduction": 0,
                     "useMessage": "",
-                    "failMessage": ""
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "inspected_portrait",
+                    "eventToTriggerOnCollect": ""
                 },
                 {
                     "itemId": "key_biblioteca",
@@ -28,12 +55,16 @@
                     "healthRestore": 0,
                     "fatigueReduction": 0,
                     "useMessage": "Usaste la llave para abrir la puerta de la biblioteca",
-                    "failMessage": ""
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "has_biblioteca_key",
+                    "eventToTriggerOnCollect": "Encontraste Llave Biblioteca"
                 }
             ]
         },
         {
-            "roomId": "room_comedor",
+            "roomId": "room_4",
             "availableActions": ["inspeccionar", "tomar", "buscar"],
             "items": [
                 {
@@ -47,16 +78,20 @@
                     "healthRestore": 1,
                     "fatigueReduction": 1,
                     "useMessage": "Comiste la manzana y recuperaste vida",
-                    "failMessage": ""
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "",
+                    "eventToTriggerOnCollect": ""
                 }
             ]
         },
         {
-            "roomId": "room_biblioteca",
+            "roomId": "room_3",
             "availableActions": ["inspeccionar", "tomar", "leer", "buscar"],
             "items": [
                 {
-                    "itemId": "key_sotano",
+                    "itemId": "key_100",
                     "itemName": "Llave del Sótano",
                     "itemType": 0,
                     "isVisible": true,
@@ -66,7 +101,11 @@
                     "healthRestore": 0,
                     "fatigueReduction": 0,
                     "useMessage": "Usaste la llave para abrir la puerta del sótano",
-                    "failMessage": ""
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "has_basement_key",
+                    "eventToTriggerOnCollect": "Encontraste Llave del Sótano"
                 },
                 {
                     "itemId": "food_bread",
@@ -79,7 +118,11 @@
                     "healthRestore": 1,
                     "fatigueReduction": 2,
                     "useMessage": "Comiste el pan y te sientes mejor",
-                    "failMessage": ""
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "",
+                    "eventToTriggerOnCollect": ""
                 },
                 {
                     "itemId": "readable_diary",
@@ -92,12 +135,16 @@
                     "healthRestore": 0,
                     "fatigueReduction": 0,
                     "useMessage": "",
-                    "failMessage": ""
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "child_event_triggered",
+                    "flagToSetOnCollect": "read_family_diary",
+                    "eventToTriggerOnCollect": "Leíste el Diario"
                 }
             ]
         },
         {
-            "roomId": "room_cocina",
+            "roomId": "room_5",
             "availableActions": ["inspeccionar", "tomar", "buscar"],
             "items": [
                 {
@@ -111,7 +158,11 @@
                     "healthRestore": 0,
                     "fatigueReduction": 3,
                     "useMessage": "Bebiste agua y reduciste tu fatiga",
-                    "failMessage": ""
+                    "failMessage": "",
+                    "requiredItemId": -1,
+                    "requiredFlag": "",
+                    "flagToSetOnCollect": "",
+                    "eventToTriggerOnCollect": ""
                 }
             ]
         }

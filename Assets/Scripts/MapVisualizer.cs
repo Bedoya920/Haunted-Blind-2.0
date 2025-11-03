@@ -11,24 +11,29 @@ public class MapVisualizer : MonoBehaviour
     [SerializeField] private RoomSystemBridge roomBridge;
     
     [Header("Configuración Visual")]
-    [SerializeField] private int cellSize = 40;
-    [SerializeField] private int mapOffsetX = 10;
-    [SerializeField] private int mapOffsetY = 10;
+    [SerializeField] private int cellSize = 60; // Celdas más grandes estilo imagen
+    [SerializeField] private int cellSpacing = 4; // Espacio entre celdas
+    [SerializeField] private int doorSize = 12; // Tamaño de las puertas (más visibles)
+    [SerializeField] private int mapOffsetX = 30;
+    [SerializeField] private int mapOffsetY = 30;
     
-    [Header("Colores")]
-    [SerializeField] private Color emptyColor = Color.black;
-    [SerializeField] private Color roomColor = new Color(0.7f, 0.7f, 0.7f);
-    [SerializeField] private Color goalColor = Color.green;
-    [SerializeField] private Color doorColor = Color.cyan;
-    [SerializeField] private Color playerColor = Color.white;
+    [Header("Colores - Estilo Pixel Art (Como la Imagen)")]
+    [SerializeField] private Color backgroundColor = new Color(0.18f, 0.18f, 0.22f); // Fondo azul oscuro
+    [SerializeField] private Color emptyColor = new Color(0.1f, 0.1f, 0.1f); // Negro para vacío
+    [SerializeField] private Color roomColor = new Color(0.55f, 0.55f, 0.55f); // Gris claro para habitaciones
+    [SerializeField] private Color initialRoomColor = new Color(0.5f, 0.85f, 0.5f); // Verde claro para inicio
+    [SerializeField] private Color currentRoomColor = new Color(0.4f, 0.75f, 0.4f); // Verde para jugador
+    [SerializeField] private Color doorColor = new Color(0.4f, 0.7f, 0.95f); // Azul claro para puertas
+    [SerializeField] private Color playerTextColor = Color.yellow; // Amarillo para "YOU"
     
     private Texture2D emptyTexture;
     private Texture2D roomTexture;
-    private Texture2D goalTexture;
+    private Texture2D initialRoomTexture;
+    private Texture2D currentRoomTexture;
     private Texture2D doorTexture;
-    private Texture2D playerTexture;
     
     private Vector2Int lastPlayerPosition = new Vector2Int(-999, -999);
+    private Vector2Int initialRoomPosition;
     
     private void Awake()
     {
@@ -47,9 +52,9 @@ public class MapVisualizer : MonoBehaviour
     {
         emptyTexture = MakeTexture(2, 2, emptyColor);
         roomTexture = MakeTexture(2, 2, roomColor);
-        goalTexture = MakeTexture(2, 2, goalColor);
+        initialRoomTexture = MakeTexture(2, 2, initialRoomColor);
+        currentRoomTexture = MakeTexture(2, 2, currentRoomColor);
         doorTexture = MakeTexture(2, 2, doorColor);
-        playerTexture = MakeTexture(2, 2, playerColor);
     }
     
     private Texture2D MakeTexture(int width, int height, Color color)
@@ -92,57 +97,139 @@ public class MapVisualizer : MonoBehaviour
         if (roomGenerator.casa.habitaciones == null || roomGenerator.casa.habitaciones.Count == 0)
             return;
         
-        // Calcular bounds del mapa
-        int minX = int.MaxValue, minY = int.MaxValue;
-        int maxX = int.MinValue, maxY = int.MinValue;
-        
-        foreach (var room in roomGenerator.casa.habitaciones)
+        // Guardar posición inicial
+        if (initialRoomPosition == Vector2Int.zero || initialRoomPosition == new Vector2Int(-999, -999))
         {
-            if (room.posicion.x < minX) minX = room.posicion.x;
-            if (room.posicion.y < minY) minY = room.posicion.y;
-            if (room.posicion.x > maxX) maxX = room.posicion.x;
-            if (room.posicion.y > maxY) maxY = room.posicion.y;
+            initialRoomPosition = roomGenerator.casa.habitacionInicial;
         }
         
-        int width = maxX - minX + 1;
-        int height = maxY - minY + 1;
+        // NUEVO: Reorganizar posiciones visuales para forma de T con DOS HORIZONTALES
+        // Línea superior: 3 habitaciones (Hall, Sala, Biblioteca)
+        // Línea inferior: 3 habitaciones (Comedor, Cocina, Baño)
+        // Vertical: 3 habitaciones (Hab.Principal, Sótano, Hab.Niños)
+        int visualWidth = 3; // 3 columnas
+        int visualHeight = 5; // 0:Superior, 1:Inferior, 2:Hab.Principal, 3:Sótano, 4:Hab.Niños
         
-        // Dibujar grid vacío
-        for (int y = 0; y < height; y++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                Rect cellRect = new Rect(
-                    mapOffsetX + x * cellSize,
-                    mapOffsetY + y * cellSize,
-                    cellSize,
-                    cellSize
-                );
-                
-                GUI.DrawTexture(cellRect, emptyTexture);
-                DrawCellBorder(cellRect);
-            }
-        }
+        // Dibujar fondo completo
+        int totalWidth = visualWidth * (cellSize + cellSpacing) + mapOffsetX * 2;
+        int totalHeight = visualHeight * (cellSize + cellSpacing) + mapOffsetY * 2;
+        GUI.DrawTexture(new Rect(0, 0, totalWidth, totalHeight), emptyTexture);
         
-        // Dibujar habitaciones
+        // Dibujar habitaciones con reorganización visual
         foreach (var room in roomGenerator.casa.habitaciones)
         {
-            int localX = room.posicion.x - minX;
-            int localY = room.posicion.y - minY;
+            // Mapear coordenadas del generador a posiciones visuales en forma de T
+            Vector2Int visualPos = GetVisualPosition(room.posicion);
             
             Rect roomRect = new Rect(
-                mapOffsetX + localX * cellSize,
-                mapOffsetY + localY * cellSize,
+                mapOffsetX + visualPos.x * (cellSize + cellSpacing),
+                mapOffsetY + visualPos.y * (cellSize + cellSpacing),
                 cellSize,
                 cellSize
             );
             
-            GUI.DrawTexture(roomRect, roomTexture);
-            DrawCellBorder(roomRect);
+            // Color según estado de la habitación
+            Texture2D texture;
+            if (room.posicion == roomBridge.currentPlayerPosition)
+            {
+                texture = currentRoomTexture; // Verde intenso para jugador actual
+            }
+            else if (room.posicion == initialRoomPosition)
+            {
+                texture = initialRoomTexture; // Verde claro para inicio
+            }
+            else
+            {
+                texture = roomTexture; // Gris para habitaciones normales
+            }
+            
+            GUI.DrawTexture(roomRect, texture);
         }
         
-        // Dibujar puertas
-        DrawDoors(minX, minY);
+        // Dibujar puertas con posiciones reorganizadas
+        DrawDoorsReorganized();
+    }
+    
+    /// <summary>
+    /// Mapea coordenadas del generador a posiciones visuales - Forma de T con DOS HORIZONTALES
+    /// </summary>
+    private Vector2Int GetVisualPosition(Vector2Int generatorPos)
+    {
+        // FORMA DE T CON DOS LÍNEAS HORIZONTALES:
+        // Y=0: [Hall(0,0)] → [Sala(1,0)] → [Biblioteca(2,0)]    ← Horizontal superior
+        //                       ↓
+        // Y=1:              [Comedor(0,1)] → [Cocina(0,2)] → [Baño(0,3)]  ← Horizontal inferior (centrada)
+        //                       ↓
+        // Y=2:              [Hab.Principal(0,4)]  (centrado)
+        //                       ↓
+        // Y=3:                 [Sótano(0,5)]
+        //                       ↓
+        // Y=4:               [Hab.Niños(0,6)]
+        
+        // Mapeo de coordenadas internas a visuales:
+        // Horizontal superior (Y=0): Hall(0,0), Sala(1,0), Biblioteca(2,0)
+        if (generatorPos == new Vector2Int(0, 0)) return new Vector2Int(0, 0); // Hall
+        if (generatorPos == new Vector2Int(1, 0)) return new Vector2Int(1, 0); // Sala
+        if (generatorPos == new Vector2Int(2, 0)) return new Vector2Int(2, 0); // Biblioteca
+        
+        // Horizontal inferior (Y=1 visual): Comedor(0,1), Cocina(0,2), Baño(0,3)
+        if (generatorPos == new Vector2Int(0, 1)) return new Vector2Int(0, 1); // Comedor
+        if (generatorPos == new Vector2Int(0, 2)) return new Vector2Int(1, 1); // Cocina (centrado)
+        if (generatorPos == new Vector2Int(0, 3)) return new Vector2Int(2, 1); // Baño (derecha)
+        
+        // Vertical (Y>=2 visual, centrado en X=1): Hab.Principal, Sótano, Hab.Niños
+        if (generatorPos == new Vector2Int(0, 4)) return new Vector2Int(1, 2); // Hab.Principal
+        if (generatorPos == new Vector2Int(0, 5)) return new Vector2Int(1, 3); // Sótano
+        if (generatorPos == new Vector2Int(0, 6)) return new Vector2Int(1, 4); // Hab.Niños
+        
+        // Fallback (no debería llegar aquí)
+        return generatorPos;
+    }
+    
+    /// <summary>
+    /// Dibuja puertas con posiciones reorganizadas en forma de T
+    /// </summary>
+    private void DrawDoorsReorganized()
+    {
+        if (roomGenerator.casa.puertas == null) return;
+        
+        foreach (var door in roomGenerator.casa.puertas)
+        {
+            // Convertir ambas posiciones de la puerta a coordenadas visuales
+            Vector2Int visualPos1 = GetVisualPosition(door.cuarto1);
+            Vector2Int visualPos2 = GetVisualPosition(door.cuarto2);
+            
+            // Determinar si la puerta es horizontal o vertical
+            bool isHorizontal = visualPos1.y == visualPos2.y;
+            
+            Rect doorRect;
+            if (isHorizontal)
+            {
+                // Puerta horizontal (entre habitaciones en la misma fila)
+                int doorX = Mathf.Min(visualPos1.x, visualPos2.x);
+                int doorY = visualPos1.y;
+                doorRect = new Rect(
+                    mapOffsetX + doorX * (cellSize + cellSpacing) + cellSize,
+                    mapOffsetY + doorY * (cellSize + cellSpacing) + (cellSize - doorSize) / 2,
+                    cellSpacing,
+                    doorSize
+                );
+            }
+            else
+            {
+                // Puerta vertical (entre habitaciones en la misma columna)
+                int doorX = visualPos1.x;
+                int doorY = Mathf.Min(visualPos1.y, visualPos2.y);
+                doorRect = new Rect(
+                    mapOffsetX + doorX * (cellSize + cellSpacing) + (cellSize - doorSize) / 2,
+                    mapOffsetY + doorY * (cellSize + cellSpacing) + cellSize,
+                    doorSize,
+                    cellSpacing
+                );
+            }
+            
+            GUI.DrawTexture(doorRect, doorTexture);
+        }
     }
     
     private void DrawDoors(int minX, int minY)
@@ -167,17 +254,17 @@ public class MapVisualizer : MonoBehaviour
             
             if (deltaX != 0) // Puerta horizontal (derecha/izquierda)
             {
-                // Dibujar puerta en el centro del borde entre las dos habitaciones
-                float centerX = mapOffsetX + (localX1 + localX2) * cellSize / 2f + cellSize / 2f;
-                float centerY = mapOffsetY + localY1 * cellSize + cellSize / 2f;
-                doorRect = new Rect(centerX - 3, centerY - cellSize / 4, 6, cellSize / 2);
+                // Puerta entre celdas horizontales
+                float x1 = mapOffsetX + localX1 * (cellSize + cellSpacing) + cellSize;
+                float y1 = mapOffsetY + localY1 * (cellSize + cellSpacing) + cellSize / 2 - doorSize / 2;
+                doorRect = new Rect(x1, y1, cellSpacing, doorSize);
             }
             else if (deltaY != 0) // Puerta vertical (arriba/abajo)
             {
-                // Dibujar puerta en el centro del borde entre las dos habitaciones
-                float centerX = mapOffsetX + localX1 * cellSize + cellSize / 2f;
-                float centerY = mapOffsetY + (localY1 + localY2) * cellSize / 2f + cellSize / 2f;
-                doorRect = new Rect(centerX - cellSize / 4, centerY - 3, cellSize / 2, 6);
+                // Puerta entre celdas verticales
+                float x1 = mapOffsetX + localX1 * (cellSize + cellSpacing) + cellSize / 2 - doorSize / 2;
+                float y1 = mapOffsetY + localY1 * (cellSize + cellSpacing) + cellSize;
+                doorRect = new Rect(x1, y1, doorSize, cellSpacing);
             }
             else
             {
@@ -218,26 +305,8 @@ public class MapVisualizer : MonoBehaviour
             playerPos = playerRoom.posicion;
         }
         
-        // Calcular offsets del mapa
-        int minX = int.MaxValue, minY = int.MaxValue;
-        foreach (var room in roomGenerator.casa.habitaciones)
-        {
-            if (room.posicion.x < minX) minX = room.posicion.x;
-            if (room.posicion.y < minY) minY = room.posicion.y;
-        }
-        
-        int localX = playerPos.x - minX;
-        int localY = playerPos.y - minY;
-        
-        // Dibujar icono del jugador (más grande y visible)
-        Rect playerRect = new Rect(
-            mapOffsetX + localX * cellSize + cellSize / 4,
-            mapOffsetY + localY * cellSize + cellSize / 4,
-            cellSize / 2,
-            cellSize / 2
-        );
-        
-        GUI.DrawTexture(playerRect, playerTexture);
+        // NUEVO: Usar posición visual en forma de T
+        Vector2Int visualPos = GetVisualPosition(playerPos);
         
         // Log si cambió de posición
         if (playerPos != lastPlayerPosition)
@@ -248,25 +317,20 @@ public class MapVisualizer : MonoBehaviour
             lastPlayerPosition = playerPos;
         }
         
-        // Etiqueta del jugador (más visible)
+        // Dibujar texto "YOU" centrado en la celda del jugador
         GUIStyle style = new GUIStyle(GUI.skin.label);
-        style.fontSize = 12;
+        style.fontSize = 16;
         style.fontStyle = FontStyle.Bold;
         style.alignment = TextAnchor.MiddleCenter;
-        style.normal.textColor = Color.yellow;
-        
-        // Fondo negro para el texto
-        GUIStyle bgStyle = new GUIStyle(GUI.skin.box);
-        bgStyle.normal.background = MakeTexture(2, 2, new Color(0, 0, 0, 0.7f));
+        style.normal.textColor = playerTextColor; // Amarillo
         
         Rect labelRect = new Rect(
-            mapOffsetX + localX * cellSize,
-            mapOffsetY + localY * cellSize - 18,
+            mapOffsetX + visualPos.x * (cellSize + cellSpacing),
+            mapOffsetY + visualPos.y * (cellSize + cellSpacing) + cellSize / 2 - 8,
             cellSize,
-            18
+            16
         );
         
-        GUI.Box(labelRect, "", bgStyle);
         GUI.Label(labelRect, "YOU", style);
     }
     
@@ -310,16 +374,20 @@ public class MapVisualizer : MonoBehaviour
     {
         int legendX = 10;
         int legendY = Screen.height - 150;
-        int legendWidth = 150;
+        int legendWidth = 180;
         int legendHeight = 140;
         
         // Fondo de la leyenda
-        GUI.Box(new Rect(legendX, legendY, legendWidth, legendHeight), "LEYENDA");
+        GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
+        boxStyle.normal.background = MakeTexture(2, 2, new Color(0, 0, 0, 0.8f));
+        GUI.Box(new Rect(legendX, legendY, legendWidth, legendHeight), "LEYENDA", boxStyle);
         
-        int itemY = legendY + 25;
-        int itemHeight = 20;
+        int itemY = legendY + 30;
+        int itemHeight = 22;
         
-        DrawLegendItem(legendX + 10, itemY, playerTexture, "Jugador (YOU)");
+        // Usar cuadrado blanco para el jugador
+        Texture2D whiteSquare = MakeTexture(2, 2, Color.white);
+        DrawLegendItem(legendX + 10, itemY, whiteSquare, "Jugador (YOU)");
         itemY += itemHeight;
         
         DrawLegendItem(legendX + 10, itemY, roomTexture, "Habitación");
@@ -328,7 +396,7 @@ public class MapVisualizer : MonoBehaviour
         DrawLegendItem(legendX + 10, itemY, doorTexture, "Puerta");
         itemY += itemHeight;
         
-        DrawLegendItem(legendX + 10, itemY, goalTexture, "Meta");
+        DrawLegendItem(legendX + 10, itemY, initialRoomTexture, "Inicio (Verde)");
         itemY += itemHeight;
         
         DrawLegendItem(legendX + 10, itemY, emptyTexture, "Vacío");
@@ -355,7 +423,7 @@ public class MapVisualizer : MonoBehaviour
         {
             case 0: return emptyTexture;
             case 1: return roomTexture;
-            case 2: return goalTexture;
+            case 2: return initialRoomTexture;
             default: return emptyTexture;
         }
     }

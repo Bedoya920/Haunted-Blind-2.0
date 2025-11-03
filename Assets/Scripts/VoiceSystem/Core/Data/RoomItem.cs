@@ -43,6 +43,14 @@ namespace VoiceSystem.Core.Data
         public string useMessage;       // Mensaje al usar
         public string failMessage;      // Mensaje si falla
         
+        [Header("Requirements")]
+        public int requiredItemId = -1;  // ID del objeto necesario para recoger este (-1 = no requiere)
+        public string requiredFlag = ""; // Flag requerido para que aparezca/sea accesible
+        
+        [Header("On Collect Events")]
+        public string flagToSetOnCollect = "";     // Flag a marcar al recoger (ej: "has_basement_key")
+        public string eventToTriggerOnCollect = ""; // Evento a disparar al recoger (ej: "found_key_event")
+        
         /// <summary>
         /// Constructor por defecto
         /// </summary>
@@ -59,6 +67,10 @@ namespace VoiceSystem.Core.Data
             fatigueReduction = 0;
             useMessage = "";
             failMessage = "";
+            requiredItemId = -1;
+            requiredFlag = "";
+            flagToSetOnCollect = "";
+            eventToTriggerOnCollect = "";
         }
         
         /// <summary>
@@ -77,6 +89,10 @@ namespace VoiceSystem.Core.Data
             fatigueReduction = 0;
             useMessage = "";
             failMessage = "";
+            requiredItemId = -1;
+            requiredFlag = "";
+            flagToSetOnCollect = "";
+            eventToTriggerOnCollect = "";
         }
         
         // Helper methods

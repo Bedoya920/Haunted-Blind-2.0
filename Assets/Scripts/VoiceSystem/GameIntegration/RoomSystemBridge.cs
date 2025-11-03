@@ -603,6 +603,31 @@ namespace VoiceSystem.GameIntegration
             
             Debug.Log($"[RoomBridge] ✅ Puerta encontrada: ID={door.id}, cuarto1=({door.cuarto1.x},{door.cuarto1.y}), cuarto2=({door.cuarto2.x},{door.cuarto2.y}), abierta={door.abierta}");
             
+            // NUEVO: Verificar si requiere tiempo específico
+            if (door.timeToUnlock > 0)
+            {
+                var gameTimer = GameTimer.Instance;
+                if (gameTimer != null)
+                {
+                    // Calcular tiempo transcurrido desde el inicio
+                    float elapsedTime = gameTimer.GetTotalTime() - gameTimer.GetRemainingTime();
+                    
+                    if (elapsedTime < door.timeToUnlock)
+                    {
+                        float timeUntilUnlock = door.timeToUnlock - elapsedTime;
+                        failureReason = !string.IsNullOrEmpty(door.mensajeBloqueada)
+                            ? door.mensajeBloqueada
+                            : $"Esta puerta se desbloqueará más adelante. Quedan {Mathf.CeilToInt(timeUntilUnlock)} segundos.";
+                        Debug.Log($"[RoomBridge] ⏰ Puerta requiere tiempo {door.timeToUnlock}s. Transcurrido: {elapsedTime}s. Faltan: {timeUntilUnlock}s");
+                        return false;
+                    }
+                    else
+                    {
+                        Debug.Log($"[RoomBridge] ⏰ Puerta desbloqueada por tiempo ({elapsedTime}s >= {door.timeToUnlock}s)");
+                    }
+                }
+            }
+            
             // Verificar si está abierta
             if (!door.abierta)
             {
@@ -679,6 +704,37 @@ namespace VoiceSystem.GameIntegration
             doorDataCache.Remove(numericId);
             
             return true;
+        }
+        
+        /// <summary>
+        /// Desbloquea puerta por ID de llave (llamado por RoomInventoryManager)
+        /// </summary>
+        public void UnlockDoorWithKeyId(int keyId)
+        {
+            if (roomGenerator == null || roomGenerator.casa == null)
+            {
+                Debug.LogWarning("[RoomBridge] No hay casa generada");
+                return;
+            }
+            
+            // Buscar puerta que requiere esta llave
+            var door = roomGenerator.casa.puertas.Find(d => d.variableNecesaria == keyId);
+            if (door != null)
+            {
+                door.abierta = true;
+                Debug.Log($"[RoomBridge] 🔓 Puerta #{door.id} desbloqueada automáticamente con llave ID:{keyId}");
+                
+                // Limpiar cache de puertas para forzar recálculo
+                ClearCache();
+                
+                // Notificar cambio de estado
+                DoorData doorData = ConvertToDoorData(door, currentPlayerPosition);
+                OnDoorStateChanged?.Invoke(doorData);
+            }
+            else
+            {
+                Debug.LogWarning($"[RoomBridge] No se encontró puerta que requiera llave ID:{keyId}");
+            }
         }
         
         public DoorData[] GetCurrentRoomDoors()

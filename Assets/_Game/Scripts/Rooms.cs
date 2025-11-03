@@ -81,6 +81,7 @@ public class Door
     // NUEVO CAMPO (opcional)
     [Header("Voice System Integration (Opcional)")]
     public string descripcionPuerta = ""; // Descripción detallada para inspeccionar
+    public float timeToUnlock = -1f; // Tiempo en segundos para desbloquear (-1 = siempre disponible, ej: 120 = se abre a las 2am)
     
     public Door()
     {
@@ -88,6 +89,7 @@ public class Door
         id = 0;
         abierta = true;
         variableNecesaria = -1;
+        timeToUnlock = -1f;
     }
 }
 

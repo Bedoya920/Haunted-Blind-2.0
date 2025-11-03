@@ -311,6 +311,52 @@ public class EventManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Busca un evento por su nombre en todas las categorías
+    /// </summary>
+    public HBEvents GetEventByName(string eventName)
+    {
+        if (string.IsNullOrEmpty(eventName)) return null;
+        
+        // Buscar en main events
+        if (mainEvents != null)
+        {
+            foreach (var evt in mainEvents)
+            {
+                if (evt.eventName == eventName) return evt;
+            }
+        }
+        
+        // Buscar en story events
+        if (storyEvents != null)
+        {
+            foreach (var evt in storyEvents)
+            {
+                if (evt.eventName == eventName) return evt;
+            }
+        }
+        
+        // Buscar en random events
+        if (randomEvents != null)
+        {
+            foreach (var evt in randomEvents)
+            {
+                if (evt.eventName == eventName) return evt;
+            }
+        }
+        
+        // Buscar en screamers
+        if (screamers != null)
+        {
+            foreach (var evt in screamers)
+            {
+                if (evt.eventName == eventName) return evt;
+            }
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
     /// Narra un evento usando el sistema de voz
     /// </summary>
     public void NarrateEvent(HBEvents hbEvent)

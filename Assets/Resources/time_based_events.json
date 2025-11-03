@@ -1,0 +1,28 @@
+{
+  "triggers": [
+    {
+      "triggerId": 1,
+      "triggerTime": 120,
+      "actionType": "unlock_door",
+      "targetId": 7,
+      "eventToTrigger": "Sótano - Puerta Desbloqueada",
+      "description": "A las 2am (120s), la puerta del sótano se desbloquea automáticamente"
+    },
+    {
+      "triggerId": 2,
+      "triggerTime": 60,
+      "actionType": "reveal_item",
+      "targetId": 50,
+      "eventToTrigger": "Objeto Revelado - Linterna",
+      "description": "Al minuto de juego, aparece una linterna en la habitación"
+    },
+    {
+      "triggerId": 3,
+      "triggerTime": 180,
+      "actionType": "trigger_event",
+      "targetId": 0,
+      "eventToTrigger": "Advertencia - Tiempo Crítico",
+      "description": "A los 3 minutos, se dispara un evento de advertencia"
+    }
+  ]
+}

@@ -116,10 +116,12 @@ namespace VoiceSystem.AI
                 
                 // Interaction commands
                 {"inspeccionar", "Inspeccionas tu entorno. [CMD:inspeccionar]"},
+                {"leer", "[CMD:leer]"},
+                {"examinar", "[CMD:leer]"},
+                {"mirar", "[CMD:leer]"},
                 {"tomar", "Intentas tomar algo. [CMD:tomar]"},
                 {"usar", "Usas un objeto. [CMD:usar]"},
                 {"comer", "Comes algo para recuperar energía. [CMD:comer]"},
-                {"leer", "Lees algo. [CMD:leer]"},
                 {"dar", "Das algo. [CMD:dar]"},
                 
                 // Item actions

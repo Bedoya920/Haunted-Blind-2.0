@@ -484,9 +484,41 @@ namespace VoiceSystem.GameIntegration
         
         private void InspectLocation()
         {
+            // NUEVO: Usar RoomInventoryManager para obtener objetos reales
+            var inventoryManager = RoomInventoryManager.Instance;
+            string currentRoomId = currentContext.currentRoom?.roomId ?? "";
+            
             string inspection = $"Inspeccionas {currentContext.currentLocation}. ";
             
-            if (currentContext.nearbyObjects.Count > 0)
+            // Obtener objetos visibles del inventario
+            if (inventoryManager != null && !string.IsNullOrEmpty(currentRoomId))
+            {
+                var inventory = inventoryManager.GetRoomInventory(currentRoomId);
+                var visibleItems = inventory.GetVisibleItems();
+                
+                if (visibleItems.Count > 0)
+                {
+                    var itemNames = visibleItems.ConvertAll(i => i.itemName);
+                    inspection += $"Ves: {string.Join(", ", itemNames)}.";
+                    
+                    // Narrar con voz (prioridad URGENTE para que no sea interrumpido)
+                    var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                    if (voiceSystem?.textToSpeech != null)
+                    {
+                        Debug.Log($"[GameContext] 🔍 Narrando inspección: {inspection}");
+                        voiceSystem.textToSpeech.Speak(inspection, VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+                    }
+                }
+                else if (currentContext.nearbyObjects.Count > 0)
+                {
+                    inspection += $"Ves: {string.Join(", ", currentContext.nearbyObjects)}.";
+                }
+                else
+                {
+                    inspection += "No hay nada notable aquí.";
+                }
+            }
+            else if (currentContext.nearbyObjects.Count > 0)
             {
                 inspection += $"Ves: {string.Join(", ", currentContext.nearbyObjects)}.";
             }
@@ -528,13 +560,50 @@ namespace VoiceSystem.GameIntegration
         
         private void ReadObject()
         {
-            if (currentContext.nearbyObjects.Contains("libros"))
+            // NUEVO: Usar RoomInventoryManager para inspeccionar objetos
+            var inventoryManager = RoomInventoryManager.Instance;
+            var roomBridge = RoomSystemBridge.Instance;
+            
+            if (inventoryManager == null || roomBridge == null)
             {
-                currentContext.AddEvent("Lees un libro. Contiene información sobre la historia de la casa.");
+                currentContext.AddEvent("No puedes leer nada ahora");
+                return;
+            }
+            
+            string currentRoomId = currentContext.currentRoom?.roomId ?? "";
+            
+            // Buscar objetos legibles en la habitación
+            var inventory = inventoryManager.GetRoomInventory(currentRoomId);
+            var readableItems = inventory.GetVisibleItems().FindAll(i => 
+                i.itemId.Contains("diary") || i.itemId.Contains("book") || i.itemId.Contains("note") || i.itemId.Contains("readable"));
+            
+            if (readableItems.Count == 0)
+            {
+                currentContext.AddEvent("No hay nada que leer aquí");
+                return;
+            }
+            
+            // Leer el primer objeto legible
+            var itemToRead = readableItems[0];
+            if (inventoryManager.TryInspectItem(currentRoomId, itemToRead.itemId, out RoomItem item, out string description))
+            {
+                currentContext.AddEvent($"Lees {item.itemName}: {description}");
+                
+                // Narrar con voz (prioridad URGENTE para que no sea interrumpido)
+                var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                if (voiceSystem?.textToSpeech != null)
+                {
+                    Debug.Log($"[GameContext] 📖 Narrando lectura de {item.itemName}: {description.Substring(0, Mathf.Min(50, description.Length))}...");
+                    voiceSystem.textToSpeech.Speak(description, VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+                }
+                else
+                {
+                    Debug.LogWarning("[GameContext] ⚠️ VoiceSystem o TTS es null, no se puede narrar");
+                }
             }
             else
             {
-                currentContext.AddEvent("No hay nada que leer aquí");
+                currentContext.AddEvent("No puedes leer eso ahora");
             }
         }
         
@@ -653,7 +722,7 @@ namespace VoiceSystem.GameIntegration
                     
                     if (item != null)
                     {
-                        if (inventoryManager.TryTakeItem(currentContext.currentRoom.roomId, item.itemId, out RoomItem takenItem))
+                        if (inventoryManager.TryTakeItem(currentContext.currentRoom.roomId, item.itemId, out RoomItem takenItem, out string failReason))
                         {
                             // Agregar al inventario del jugador
                             currentContext.inventory.Add(takenItem.itemId);
@@ -663,6 +732,16 @@ namespace VoiceSystem.GameIntegration
                             if (confirmationManager != null)
                             {
                                 confirmationManager.ConfirmTakeItem(takenItem.itemName, takenItem.itemType);
+                            }
+                        }
+                        else
+                        {
+                            // No se pudo tomar - narrar razón
+                            var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                            if (voiceSystem != null && !string.IsNullOrEmpty(failReason))
+                            {
+                                voiceSystem.textToSpeech?.Speak(failReason);
+                                Debug.Log($"[GameContext] No se pudo tomar {itemName}: {failReason}");
                             }
                             
                             // Remover de objetos visibles
