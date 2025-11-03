@@ -56,6 +56,9 @@ namespace VoiceSystem.GameIntegration
         [Tooltip("Posición actual del jugador en la matriz")]
         public Vector2Int currentPlayerPosition;
         
+        [Header("Estado de Inicialización")]
+        public bool isFullyInitialized = false; // Flag para saber si SetRoomGenerator() terminó
+        
         // Eventos (implementados de IRoomSystemProvider)
         public event System.Action<RoomData> OnRoomChanged;
         public event System.Action<DoorData> OnDoorStateChanged;
@@ -191,6 +194,49 @@ namespace VoiceSystem.GameIntegration
             {
                 Debug.Log($"  - {door.doorName} hacia {door.direction}");
             }
+            
+            // Marcar como completamente inicializado
+            isFullyInitialized = true;
+            Debug.Log("[RoomBridge] ✅ Completamente inicializado y listo");
+            
+            // DIAGNÓSTICO: Mostrar TODAS las puertas con sus direcciones
+            DiagnosticarTodasLasPuertas();
+        }
+        
+        /// <summary>
+        /// Diagnóstico completo de todas las puertas y sus direcciones
+        /// </summary>
+        [ContextMenu("🔍 Diagnosticar Todas las Puertas")]
+        public void DiagnosticarTodasLasPuertas()
+        {
+            if (roomGenerator == null || roomGenerator.casa == null)
+            {
+                Debug.LogError("[RoomBridge] No hay casa generada para diagnosticar");
+                return;
+            }
+            
+            Debug.Log($"\n========== 🚪 DIAGNÓSTICO DE PUERTAS ==========");
+            Debug.Log($"Total de puertas: {roomGenerator.casa.puertas.Count}");
+            Debug.Log($"Total de habitaciones: {roomGenerator.casa.habitaciones.Count}\n");
+            
+            foreach (var door in roomGenerator.casa.puertas)
+            {
+                var room1 = FindRoomAtPosition(door.cuarto1);
+                var room2 = FindRoomAtPosition(door.cuarto2);
+                
+                string nombre1 = room1 != null ? room1.nombre : "???";
+                string nombre2 = room2 != null ? room2.nombre : "???";
+                
+                string dir1to2 = CalculateDirection(door.cuarto1, door.cuarto2);
+                string dir2to1 = CalculateDirection(door.cuarto2, door.cuarto1);
+                
+                Debug.Log($"Puerta #{door.id}: {nombre1}({door.cuarto1.x},{door.cuarto1.y}) ↔ {nombre2}({door.cuarto2.x},{door.cuarto2.y})");
+                Debug.Log($"  Desde {nombre1}: ve hacia '{dir1to2}' para ir a {nombre2}");
+                Debug.Log($"  Desde {nombre2}: ve hacia '{dir2to1}' para volver a {nombre1}");
+                Debug.Log($"  Estado: {(door.abierta ? "🟢 ABIERTA" : "🔒 CERRADA")}\n");
+            }
+            
+            Debug.Log($"========== FIN DIAGNÓSTICO ==========\n");
         }
         
         #region Conversión Room → RoomData
@@ -198,7 +244,7 @@ namespace VoiceSystem.GameIntegration
         /// <summary>
         /// Convierte Room del generador a RoomData del sistema de voz
         /// </summary>
-        private RoomData ConvertToRoomData(Room generatorRoom)
+        private RoomData ConvertToRoomData(Room generatorRoom, bool forceRecalculate = false)
         {
             EnsureCachesInitialized(); // CRÍTICO: Llamar siempre primero
             
@@ -208,16 +254,23 @@ namespace VoiceSystem.GameIntegration
                 return null;
             }
             
-            // Check cache
-            if (roomDataCache.TryGetValue(generatorRoom.id, out RoomData cached))
+            // ⚠️ CACHE DESHABILITADO TEMPORALMENTE PARA DEBUG
+            // Check cache (solo si no forzamos recálculo)
+            //if (!forceRecalculate && roomDataCache.TryGetValue(generatorRoom.id, out RoomData cached))
+            //{
+            //    if (showCacheDebugLogs)
+            //        Debug.Log($"[RoomBridge] ConvertToRoomData: Usando cache para room ID:{generatorRoom.id}");
+            //    return cached;
+            //}
+            
+            // Si forzamos recálculo, limpiar el cache de esta habitación
+            if (forceRecalculate && roomDataCache.ContainsKey(generatorRoom.id))
             {
-                if (showCacheDebugLogs)
-                    Debug.Log($"[RoomBridge] ConvertToRoomData: Usando cache para room ID:{generatorRoom.id}");
-                return cached;
+                roomDataCache.Remove(generatorRoom.id);
+                Debug.Log($"[RoomBridge] 🔄 Cache invalidado para room ID:{generatorRoom.id} ({generatorRoom.nombre})");
             }
             
-            if (showCacheDebugLogs)
-                Debug.Log($"[RoomBridge] ConvertToRoomData: Creando RoomData para room ID:{generatorRoom.id} en posición {generatorRoom.posicion}");
+            Debug.Log($"[RoomBridge] 🏗️ ConvertToRoomData: Creando RoomData para {generatorRoom.nombre} (ID:{generatorRoom.id}) en posición {generatorRoom.posicion} | forceRecalculate={forceRecalculate}");
             
             var roomData = new RoomData
             {
@@ -259,11 +312,15 @@ namespace VoiceSystem.GameIntegration
                 roomData.metadata["totalItems"] = roomInventory.items.Count.ToString();
             }
             
-            if (showCacheDebugLogs)
-                Debug.Log($"[RoomBridge] RoomData creado: {roomData.roomName} con {roomData.doors.Count} puertas");
+            Debug.Log($"[RoomBridge] ✅ RoomData creado: {roomData.roomName} con {roomData.doors.Count} puertas");
+            foreach (var d in roomData.doors)
+            {
+                Debug.Log($"[RoomBridge]   → Puerta: {d.doorName} | Dir: {d.direction} | ID: {d.doorId}");
+            }
             
+            // ⚠️ CACHE DESHABILITADO TEMPORALMENTE PARA DEBUG
             // Cache
-            roomDataCache[generatorRoom.id] = roomData;
+            //roomDataCache[generatorRoom.id] = roomData;
             return roomData;
         }
         
@@ -328,16 +385,18 @@ namespace VoiceSystem.GameIntegration
             
             if (generatorDoor == null) return null;
             
-            // Check cache
-            if (doorDataCache.TryGetValue(generatorDoor.id, out DoorData cached))
-                return cached;
+            // ⚠️ CACHE DE PUERTAS DESHABILITADO - El cache anterior no consideraba fromRoom
+            // Una puerta tiene DIFERENTE dirección dependiendo desde dónde la mires:
+            //   Door #3 desde Hall(0,0) → "abajo" hacia Comedor
+            //   Door #3 desde Comedor(0,1) → "arriba" hacia Hall
+            // Por eso NO podemos cachear solo por door.id
             
             // Determinar habitación destino
             Vector2Int toRoom = (generatorDoor.cuarto1 == fromRoom) 
                 ? generatorDoor.cuarto2 
                 : generatorDoor.cuarto1;
             
-            // Calcular dirección
+            // Calcular dirección DESDE fromRoom HACIA toRoom
             string direction = CalculateDirection(fromRoom, toRoom);
             
             // Buscar nombre de habitación destino
@@ -365,8 +424,8 @@ namespace VoiceSystem.GameIntegration
                 doorData.description += $". {generatorDoor.mensajeBloqueada}";
             }
             
-            // Cache
-            doorDataCache[generatorDoor.id] = doorData;
+            // ⚠️ NO CACHEAR - Las puertas tienen diferente dirección según fromRoom
+            // doorDataCache[generatorDoor.id] = doorData;
             return doorData;
         }
         
@@ -378,20 +437,43 @@ namespace VoiceSystem.GameIntegration
             int deltaX = to.x - from.x;
             int deltaY = to.y - from.y;
             
-            // Usar direcciones VISUALES del mapa (arriba/abajo/izquierda/derecha)
-            // En el mapa: Y aumenta hacia ABAJO, X aumenta hacia la DERECHA
+            /* SISTEMA DE NAVEGACIÓN INTUITIVO PARA JUGADORES CIEGOS
+             * 
+             * Mapa técnico (coordenadas Unity):
+             *   X aumenta → DERECHA
+             *   Y aumenta → ABAJO en pantalla (como índice de array)
+             * 
+             * Traducción a lenguaje natural del jugador:
+             *   deltaX > 0  →  "derecha"   (Sala está a la derecha de Hall)
+             *   deltaX < 0  →  "izquierda" (Hall está a la izquierda de Sala)
+             *   deltaY > 0  →  "abajo"     (Comedor está abajo del Hall, avanzando en profundidad)
+             *   deltaY < 0  →  "arriba"    (Hall está arriba del Comedor, retrocediendo)
+             * 
+             * Ejemplo práctico desde Hall(0,0):
+             *   Sala(1,0)      → deltaX=+1, deltaY=0  → "derecha"
+             *   Comedor(0,1)   → deltaX=0,  deltaY=+1 → "abajo"
+             * 
+             * Desde Comedor(0,1):
+             *   Hall(0,0)      → deltaX=0,  deltaY=-1 → "arriba" (volver)
+             *   Cocina(0,2)    → deltaX=0,  deltaY=+1 → "abajo" (avanzar)
+             */
             
             // Priorizar eje más significativo
             if (Mathf.Abs(deltaX) > Mathf.Abs(deltaY))
             {
+                // Movimiento HORIZONTAL predomina
                 return deltaX > 0 ? "derecha" : "izquierda";
             }
             else if (Mathf.Abs(deltaY) > Mathf.Abs(deltaX))
             {
+                // Movimiento VERTICAL predomina
+                // deltaY > 0 = aumenta Y = ABAJO en el eje vertical (avanzar en profundidad)
+                // deltaY < 0 = disminuye Y = ARRIBA en el eje vertical (retroceder)
                 return deltaY > 0 ? "abajo" : "arriba";
             }
             else if (deltaX != 0)
             {
+                // Diagonal: priorizar horizontal
                 return deltaX > 0 ? "derecha" : "izquierda";
             }
             
@@ -433,6 +515,43 @@ namespace VoiceSystem.GameIntegration
             return ConvertToRoomData(generatorRoom);
         }
         
+        /// <summary>
+        /// Obtiene habitación actual SIEMPRE FRESCA (sin cache)
+        /// Usa esto para consultas que necesitan datos actualizados de puertas
+        /// </summary>
+        public RoomData GetCurrentRoomFresh()
+        {
+            EnsureCachesInitialized();
+            
+            Debug.Log($"[RoomBridge] 🔄 GetCurrentRoomFresh() llamado - Posición actual: {currentPlayerPosition}");
+            
+            if (roomGenerator == null || roomGenerator.casa == null)
+            {
+                Debug.LogError("[RoomBridge] GetCurrentRoomFresh: roomGenerator o casa es null!");
+                return null;
+            }
+            
+            Room generatorRoom = FindRoomAtPosition(currentPlayerPosition);
+            if (generatorRoom == null)
+            {
+                Debug.LogError($"[RoomBridge] GetCurrentRoomFresh: No se encontró habitación en posición {currentPlayerPosition}");
+                return null;
+            }
+            
+            Debug.Log($"[RoomBridge] 📍 Habitación encontrada: {generatorRoom.nombre} (ID:{generatorRoom.id}) en {currentPlayerPosition}");
+            
+            // FORZAR RECÁLCULO - siempre bypass cache
+            var freshRoom = ConvertToRoomData(generatorRoom, forceRecalculate: true);
+            
+            Debug.Log($"[RoomBridge] ✅ GetCurrentRoomFresh retorna: {freshRoom.roomName} con {freshRoom.doors.Count} puertas");
+            foreach (var door in freshRoom.doors)
+            {
+                Debug.Log($"[RoomBridge]   🚪 {door.doorName} → {door.direction} (ID: {door.doorId}, Locked: {door.isLocked})");
+            }
+            
+            return freshRoom;
+        }
+        
         public RoomData GetRoomById(string roomId)
         {
             // Extraer ID numérico del string "room_12345"
@@ -451,26 +570,38 @@ namespace VoiceSystem.GameIntegration
         {
             failureReason = "";
             
+            Debug.Log($"[RoomBridge] 🚪 TryMoveThroughDoor: {doorId}");
+            
             // Extraer ID numérico
             if (!doorId.StartsWith("door_")) 
             {
                 failureReason = "ID de puerta inválido";
+                Debug.LogWarning($"[RoomBridge] ❌ ID inválido: {doorId}");
                 return false;
             }
             
             if (!int.TryParse(doorId.Substring(5), out int numericId))
             {
                 failureReason = "No se pudo parsear ID de puerta";
+                Debug.LogWarning($"[RoomBridge] ❌ No se pudo parsear: {doorId}");
                 return false;
             }
+            
+            Debug.Log($"[RoomBridge] Buscando puerta con ID numérico: {numericId}");
             
             // Buscar puerta
             Door door = roomGenerator.casa.puertas.FirstOrDefault(d => d.id == numericId);
             if (door == null)
             {
                 failureReason = "Puerta no encontrada";
+                Debug.LogError($"[RoomBridge] ❌ Puerta {numericId} no existe en casa.puertas");
+                
+                // Diagnóstico: Mostrar todas las puertas disponibles
+                Debug.Log($"[RoomBridge] Puertas disponibles: {string.Join(", ", roomGenerator.casa.puertas.Select(p => p.id))}");
                 return false;
             }
+            
+            Debug.Log($"[RoomBridge] ✅ Puerta encontrada: ID={door.id}, cuarto1=({door.cuarto1.x},{door.cuarto1.y}), cuarto2=({door.cuarto2.x},{door.cuarto2.y}), abierta={door.abierta}");
             
             // Verificar si está abierta
             if (!door.abierta)
@@ -502,8 +633,8 @@ namespace VoiceSystem.GameIntegration
             if (showMovementLogs)
                 Debug.Log($"[RoomBridge] 🎮 Jugador: {previousPosition} → {newPosition}");
             
-            // Disparar evento
-            RoomData newRoomData = ConvertToRoomData(destinationRoom);
+            // Disparar evento - FORZAR RECÁLCULO para obtener puertas frescas
+            RoomData newRoomData = ConvertToRoomData(destinationRoom, true);
             OnRoomChanged?.Invoke(newRoomData);
             
             // Sync with PlayerStateManager

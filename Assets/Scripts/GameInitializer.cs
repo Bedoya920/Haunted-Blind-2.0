@@ -13,7 +13,8 @@ public class GameInitializer : MonoBehaviour
     [SerializeField] private RoomGenerator3000 roomGenerator;
     
     [Header("Configuración")]
-    [SerializeField] private int numeroHabitaciones = 9; // Algoritmo mejorado soporta 9+ habitaciones
+    [SerializeField] private bool loadFromJson = true; // NUEVO: Cargar mapa guardado en lugar de generar
+    [SerializeField] private int numeroHabitaciones = 9; // Solo si loadFromJson = false
     [SerializeField] private float delayBeforeStart = 2f; // Espera antes de narrar inicio
     [SerializeField] private int maxGenerationRetries = 3; // Reintentos si falla
     
@@ -84,51 +85,77 @@ public class GameInitializer : MonoBehaviour
             }
         }
         
-        // Configurar número de habitaciones si está en 0
-        if (roomGenerator.numeroHabitaciones == 0)
+        // NUEVO: Cargar desde JSON o generar
+        if (loadFromJson)
         {
-            roomGenerator.numeroHabitaciones = numeroHabitaciones;
-        }
-        
-        // Intentar generar con reintentos
-        bool success = false;
-        int retries = 0;
-        
-        while (!success && retries < maxGenerationRetries)
-        {
-            if (retries > 0)
-            {
-                Debug.LogWarning($"[GameInit] Reintento {retries}/{maxGenerationRetries} de generación...");
-            }
+            Debug.Log("[GameInit] Cargando casa desde JSON...");
+            roomGenerator.CargarCasaJson();
             
-            Debug.Log($"[GameInit] Generando casa con {roomGenerator.numeroHabitaciones} habitaciones...");
-            
-            // Ejecutar generador
-            roomGenerator.Iniciar();
-            
-            yield return new WaitForSeconds(0.5f);
-            
-            // Verificar éxito
+            // Verificar que se cargó correctamente
             if (roomGenerator.casa != null && 
                 roomGenerator.casa.habitaciones != null && 
                 roomGenerator.casa.habitaciones.Count > 0)
             {
-                success = true;
-                Debug.Log($"[GameInit] ✅ Casa generada: {roomGenerator.casa.habitaciones.Count} habitaciones, {roomGenerator.casa.puertas.Count} puertas");
+                Debug.Log($"[GameInit] ✅ Casa cargada desde JSON: {roomGenerator.casa.habitaciones.Count} habitaciones, {roomGenerator.casa.puertas.Count} puertas");
             }
             else
             {
-                retries++;
-                if (retries < maxGenerationRetries)
+                Debug.LogError("[GameInit] ❌ Error al cargar casa desde JSON. Generando nueva casa...");
+                loadFromJson = false; // Fallback a generación
+            }
+        }
+        
+        // Generar nueva casa si no se cargó desde JSON
+        if (!loadFromJson)
+        {
+            // Configurar número de habitaciones si está en 0
+            if (roomGenerator.numeroHabitaciones == 0)
+            {
+                roomGenerator.numeroHabitaciones = numeroHabitaciones;
+            }
+            
+            // Intentar generar con reintentos
+            bool success = false;
+            int retries = 0;
+            
+            while (!success && retries < maxGenerationRetries)
+            {
+                if (retries > 0)
                 {
-                    Debug.LogWarning($"[GameInit] ⚠️ Generación falló, reintentando...");
+                    Debug.LogWarning($"[GameInit] Reintento {retries}/{maxGenerationRetries} de generación...");
+                }
+                
+                Debug.Log($"[GameInit] Generando casa con {roomGenerator.numeroHabitaciones} habitaciones...");
+                
+                // Ejecutar generador
+                roomGenerator.Iniciar();
+                
+                yield return new WaitForSeconds(0.5f);
+                
+                // Verificar éxito
+                if (roomGenerator.casa != null && 
+                    roomGenerator.casa.habitaciones != null && 
+                    roomGenerator.casa.habitaciones.Count > 0)
+                {
+                    success = true;
+                    Debug.Log($"[GameInit] ✅ Casa generada: {roomGenerator.casa.habitaciones.Count} habitaciones, {roomGenerator.casa.puertas.Count} puertas");
                 }
                 else
                 {
-                    Debug.LogError("[GameInit] ❌ Error generando casa después de todos los reintentos");
+                    retries++;
+                    if (retries < maxGenerationRetries)
+                    {
+                        Debug.LogWarning($"[GameInit] ⚠️ Generación falló, reintentando...");
+                    }
+                    else
+                    {
+                        Debug.LogError("[GameInit] ❌ Error generando casa después de todos los reintentos");
+                    }
                 }
             }
         }
+        
+        yield return null;
     }
     
     private IEnumerator SetupIntegration()

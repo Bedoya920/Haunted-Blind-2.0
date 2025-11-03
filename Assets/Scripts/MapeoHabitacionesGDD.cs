@@ -75,36 +75,57 @@ public class MapeoHabitacionesGDD : MonoBehaviour
         // Obtener todas las habitaciones generadas
         var habitacionesDisponibles = new List<Room>(roomGenerator.casa.habitaciones);
         
-        // ✅ CRÍTICO: Asignar la habitación INICIAL como "hall" (punto de entrada)
-        var habitacionInicial = roomGenerator.casa.habitaciones.Find(h => 
-            h.posicion == roomGenerator.casa.habitacionInicial
+        // NUEVO: Detectar si es un mapa predefinido (con nombres ya asignados)
+        bool esMapaPredefinido = habitacionesDisponibles.Exists(h => 
+            h.nombre == "Hall" || h.nombre == "Biblioteca" || h.nombre == "Sala"
         );
         
-        if (habitacionInicial != null)
+        if (esMapaPredefinido)
         {
-            nombreAId["hall"] = "room_" + habitacionInicial.id;
-            habitacionInicial.nombre = "Hall"; // Actualizar nombre
-            habitacionesDisponibles.Remove(habitacionInicial);
-            Debug.Log($"[MapeoHabitaciones] ✅ HALL (habitación inicial) → room_{habitacionInicial.id}");
+            Debug.Log("[MapeoHabitaciones] 📋 Mapa predefinido detectado - Mapeando directamente desde nombres");
+            
+            foreach (var habitacion in roomGenerator.casa.habitaciones)
+            {
+                string nombreGDD = habitacion.nombre.ToLower().Replace(" ", "_").Replace("á", "a").Replace("ó", "o");
+                nombreAId[nombreGDD] = "room_" + habitacion.id;
+                Debug.Log($"[MapeoHabitaciones] '{nombreGDD}' → room_{habitacion.id} ({habitacion.nombre})");
+            }
         }
         else
         {
-            Debug.LogWarning("[MapeoHabitaciones] ⚠️ No se encontró habitación inicial!");
+            Debug.Log("[MapeoHabitaciones] 🎲 Mapa aleatorio - Mapeando con heurística");
+            
+            // ✅ CRÍTICO: Asignar la habitación INICIAL como "hall" (punto de entrada)
+            var habitacionInicial = roomGenerator.casa.habitaciones.Find(h => 
+                h.posicion == roomGenerator.casa.habitacionInicial
+            );
+            
+            if (habitacionInicial != null)
+            {
+                nombreAId["hall"] = "room_" + habitacionInicial.id;
+                habitacionInicial.nombre = "Hall"; // Actualizar nombre
+                habitacionesDisponibles.Remove(habitacionInicial);
+                Debug.Log($"[MapeoHabitaciones] ✅ HALL (habitación inicial) → room_{habitacionInicial.id}");
+            }
+            else
+            {
+                Debug.LogWarning("[MapeoHabitaciones] ⚠️ No se encontró habitación inicial!");
+            }
+            
+            // Mapear habitaciones específicas del GDD
+            MapearHabitacionPorObjetos("sala", habitacionesDisponibles, new[] { "piano", "retrato", "cuadro" });
+            MapearHabitacionPorObjetos("biblioteca", habitacionesDisponibles, new[] { "libro", "estante", "libros" });
+            MapearHabitacionPorObjetos("comedor", habitacionesDisponibles, new[] { "mesa", "silla", "vajilla" });
+            MapearHabitacionPorObjetos("cocina", habitacionesDisponibles, new[] { "estufa", "refrigerador", "cocina" });
+            MapearHabitacionPorNombre("baño", habitacionesDisponibles);
+            MapearHabitacionPorNombre("sótano", habitacionesDisponibles);
+            MapearHabitacionPorNombre("sotano", habitacionesDisponibles); // Sin acento
+            MapearHabitacionPorObjetos("habitacion_niños", habitacionesDisponibles, new[] { "cama", "juguete", "niño" });
+            MapearHabitacionPorNombre("habitacion principal", habitacionesDisponibles);
+            
+            // Asignar habitaciones restantes aleatoriamente
+            AsignarHabitacionesRestantes(habitacionesDisponibles);
         }
-        
-        // Mapear habitaciones específicas del GDD
-        MapearHabitacionPorObjetos("sala", habitacionesDisponibles, new[] { "piano", "retrato", "cuadro" });
-        MapearHabitacionPorObjetos("biblioteca", habitacionesDisponibles, new[] { "libro", "estante", "libros" });
-        MapearHabitacionPorObjetos("comedor", habitacionesDisponibles, new[] { "mesa", "silla", "vajilla" });
-        MapearHabitacionPorObjetos("cocina", habitacionesDisponibles, new[] { "estufa", "refrigerador", "cocina" });
-        MapearHabitacionPorNombre("baño", habitacionesDisponibles);
-        MapearHabitacionPorNombre("sótano", habitacionesDisponibles);
-        MapearHabitacionPorNombre("sotano", habitacionesDisponibles); // Sin acento
-        MapearHabitacionPorObjetos("habitacion_niños", habitacionesDisponibles, new[] { "cama", "juguete", "niño" });
-        MapearHabitacionPorNombre("habitacion principal", habitacionesDisponibles);
-        
-        // Asignar habitaciones restantes aleatoriamente
-        AsignarHabitacionesRestantes(habitacionesDisponibles);
         
         // Ahora REESCRIBIR los roomIds en los eventos
         ReescribirEventosConIds();

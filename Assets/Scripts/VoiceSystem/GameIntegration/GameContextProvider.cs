@@ -32,8 +32,31 @@ namespace VoiceSystem.GameIntegration
         
         private System.Collections.IEnumerator SetupAfterGeneration()
         {
-            // Wait for GameInitializer to finish generating house
-            yield return new WaitForSeconds(2.5f);
+            // Esperar a que GameInitializer termine de configurar RoomSystemBridge
+            Debug.Log("[GameContext] Esperando a que RoomSystemBridge esté listo...");
+            
+            // Esperar hasta que isFullyInitialized sea true
+            int maxAttempts = 20; // 10 segundos máximo
+            int attempts = 0;
+            
+            while (attempts < maxAttempts)
+            {
+                if (roomBridge != null && roomBridge.isFullyInitialized)
+                {
+                    Debug.Log($"[GameContext] ✅ RoomSystemBridge listo en intento {attempts + 1}");
+                    break;
+                }
+                
+                yield return new WaitForSeconds(0.5f);
+                attempts++;
+            }
+            
+            if (attempts >= maxAttempts)
+            {
+                Debug.LogError("[GameContext] ❌ Timeout esperando RoomSystemBridge");
+                Debug.LogError($"[GameContext] roomBridge null? {roomBridge == null}, isFullyInitialized? {roomBridge?.isFullyInitialized}");
+                yield break;
+            }
             
             if (roomBridge != null)
             {
@@ -67,13 +90,10 @@ namespace VoiceSystem.GameIntegration
                 return;
             }
             
-            // Verificar que el bridge está inicializado
-            if (roomBridge.currentPlayerPosition == Vector2Int.zero)
-            {
-                Debug.LogWarning("[GameContext] RoomSystemBridge no tiene posición inicial. Esperando...");
-                StartCoroutine(SetupAfterGeneration());
-                return;
-            }
+            // YA NO VERIFICAMOS aquí porque SetupAfterGeneration() ya esperó
+            // Asumimos que roomBridge.currentPlayerPosition es válido
+            
+            Debug.Log($"[GameContext] Configurando desde posición: {roomBridge.currentPlayerPosition}");
             
             // Obtener habitación actual del generador
             currentContext.currentRoom = roomBridge.GetCurrentRoom();
@@ -99,14 +119,28 @@ namespace VoiceSystem.GameIntegration
         
         private void OnRoomChangedFromGenerator(RoomData newRoom)
         {
-            currentContext.currentRoom = newRoom;
-            currentContext.currentLocation = newRoom.roomName;
+            // CRÍTICO: Forzar recálculo para asegurar datos frescos
+            var freshRoom = roomBridge?.GetCurrentRoomFresh();
+            if (freshRoom != null)
+            {
+                currentContext.currentRoom = freshRoom;
+                currentContext.currentLocation = freshRoom.roomName;
+                Debug.Log($"[GameContext] ✅ Actualizado con datos FRESCOS: {freshRoom.roomName} con {freshRoom.doors.Count} puertas");
+            }
+            else
+            {
+                // Fallback a los datos del evento
+                currentContext.currentRoom = newRoom;
+                currentContext.currentLocation = newRoom.roomName;
+                Debug.LogWarning($"[GameContext] ⚠️ Usando datos del evento (GetCurrentRoomFresh falló)");
+            }
+            
             currentContext.nearbyObjects.Clear();
-            currentContext.nearbyObjects.AddRange(newRoom.objects);
+            currentContext.nearbyObjects.AddRange(currentContext.currentRoom.objects);
             
-            currentContext.AddEvent($"Entraste a {newRoom.roomName}");
+            currentContext.AddEvent($"Entraste a {currentContext.currentRoom.roomName}");
             
-            Debug.Log($"[GameContext] Cambio de habitación: {newRoom.roomName}");
+            Debug.Log($"[GameContext] Cambio de habitación: {currentContext.currentRoom.roomName}");
         }
         
         
@@ -332,7 +366,15 @@ namespace VoiceSystem.GameIntegration
             
             if (roomBridge.TryMoveThroughDoor(door.doorId, out string failureReason))
             {
-                var newRoom = roomBridge.GetCurrentRoom();
+                // IMPORTANTE: Usar GetCurrentRoomFresh() para obtener puertas actualizadas
+                var newRoom = roomBridge.GetCurrentRoomFresh();
+                
+                // Actualizar el contexto INMEDIATAMENTE con los datos frescos
+                if (newRoom != null)
+                {
+                    currentContext.currentRoom = newRoom;
+                    currentContext.currentLocation = newRoom.roomName;
+                }
                 
                 // Confirmar movimiento
                 var confirmManager = ActionConfirmationManager.Instance;

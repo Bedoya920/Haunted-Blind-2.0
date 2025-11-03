@@ -1,0 +1,247 @@
+{
+    "id": 100001,
+    "habitaciones": [
+        {
+            "id": 1,
+            "nombre": "Hall",
+            "descripLarga": "Entras al hall de entrada. El aire huele a madera vieja y polvo acumulado. Tus pasos resuenan sobre el suelo de tablones agrietados. A tu alrededor, el silencio es denso, interrumpido solo por el crujido lejano de la estructura. La oscuridad es absoluta, pero percibes el espacio amplio que te rodea.",
+            "descripCorta": "Estás en el hall de entrada. El silencio es denso y el aire huele a abandono.",
+            "puertas": 2,
+            "posicion": {
+                "x": 0,
+                "y": 0
+            },
+            "objetosEnHabitacion": []
+        },
+        {
+            "id": 2,
+            "nombre": "Sala",
+            "descripLarga": "Una habitación amplia y polvorienta. Hueles a madera vieja y polvo. Escuchas el eco de tus pasos en el espacio vacío. Hay algo que suena como un reloj de péndulo marcando el tiempo con un tic-tac irregular. Percibes muebles cubiertos de sábanas y, en la pared, el marco de lo que parece ser un cuadro grande.",
+            "descripCorta": "La sala principal. Polvorienta y silenciosa, excepto por el tic-tac de un reloj.",
+            "puertas": 2,
+            "posicion": {
+                "x": 1,
+                "y": 0
+            },
+            "objetosEnHabitacion": []
+        },
+        {
+            "id": 3,
+            "nombre": "Biblioteca",
+            "descripLarga": "Una habitación llena de libros antiguos. El aire huele a papel viejo y humedad. Escuchas el crujir de las estanterías cuando te mueves. Hay un ligero susurro, como si las páginas hablaran entre sí. Algunos volúmenes parecen tener sellos extraños en sus portadas que puedes sentir al tacto.",
+            "descripCorta": "La biblioteca. Huele a libros antiguos y humedad. Las estanterías crujen a tu alrededor.",
+            "puertas": 1,
+            "posicion": {
+                "x": 2,
+                "y": 0
+            },
+            "objetosEnHabitacion": []
+        },
+        {
+            "id": 4,
+            "nombre": "Comedor",
+            "descripLarga": "Una mesa larga domina el centro de la habitación. Tus manos encuentran platos y cubiertos desordenados, cubiertos de polvo. El aire tiene un olor extraño, mezcla de comida rancia y humedad. Escuchas el goteo constante de agua desde algún lugar. Una de las sillas parece estar separada del resto, como si alguien acabara de levantarse.",
+            "descripCorta": "El comedor. Una mesa con platos desordenados y el sonido constante de agua goteando.",
+            "puertas": 2,
+            "posicion": {
+                "x": 0,
+                "y": 1
+            },
+            "objetosEnHabitacion": []
+        },
+        {
+            "id": 5,
+            "nombre": "Cocina",
+            "descripLarga": "La cocina está fría. Tus pasos resuenan sobre las baldosas agrietadas. Sientes la estufa oxidada y el refrigerador que ya no funciona. Hay un olor persistente a comida podrida mezclado con algo metálico. Escuchas un zumbido bajo, como si algo eléctrico estuviera a punto de encenderse. Los cajones están entreabiertos, como si alguien hubiera estado buscando algo con urgencia.",
+            "descripCorta": "La cocina. Fría, con olor a comida podrida y un zumbido eléctrico constante.",
+            "puertas": 2,
+            "posicion": {
+                "x": 0,
+                "y": 2
+            },
+            "objetosEnHabitacion": []
+        },
+        {
+            "id": 6,
+            "nombre": "Baño",
+            "descripLarga": "El baño es pequeño y claustrofóbico. El aire está cargado de humedad y moho. Escuchas el goteo constante de un grifo roto que resuena contra la porcelana. Tus dedos encuentran el lavabo agrietado y el espejo frío. Hay un olor a agua estancada. Por un momento, crees escuchar una respiración que no es la tuya.",
+            "descripCorta": "El baño. Húmedo, con olor a moho y el constante goteo de un grifo.",
+            "puertas": 2,
+            "posicion": {
+                "x": 0,
+                "y": 3
+            },
+            "objetosEnHabitacion": []
+        },
+        {
+            "id": 7,
+            "nombre": "Habitación Principal",
+            "descripLarga": "La habitación principal. El aire es pesado, casi sofocante. Tus manos encuentran una cama grande con sábanas húmedas y frías. Hay un tocador con objetos personales: cepillos, frascos de perfume vacíos. En un rincón, percibes algo suave y marchito: flores secas. El silencio aquí es diferente, como si la habitación guardara secretos. Escuchas un susurro muy lejano, casi imperceptible.",
+            "descripCorta": "La habitación principal. Aire pesado, cama con sábanas frías y un susurro lejano.",
+            "puertas": 2,
+            "posicion": {
+                "x": 0,
+                "y": 4
+            },
+            "objetosEnHabitacion": []
+        },
+        {
+            "id": 8,
+            "nombre": "Sótano",
+            "descripLarga": "Desciendes al sótano. El aire es denso, húmedo y huele a tierra mojada. Cada paso en las escaleras de madera cruje peligrosamente. Abajo, el frío es penetrante. Escuchas el goteo de agua filtrándose por las paredes de piedra. Hay cajas apiladas, viejas herramientas oxidadas. En el fondo, percibes algo que late suavemente, como un corazón enterrado. Este lugar guarda los secretos más oscuros de la casa.",
+            "descripCorta": "El sótano. Frío, húmedo, con olor a tierra mojada y un latido lejano.",
+            "puertas": 2,
+            "posicion": {
+                "x": 0,
+                "y": 5
+            },
+            "objetosEnHabitacion": []
+        },
+        {
+            "id": 9,
+            "nombre": "Habitación de los Niños",
+            "descripLarga": "Entras a la habitación de los niños. El aire huele a polvo y juguetes olvidados. Tus pies pisan sobre algo suave, quizás peluches tirados en el suelo. Escuchas el crujido de una cama pequeña y el tintineo de una caja de música que suena sola, repitiendo una melodía infantil distorsionada. Las paredes están frías. Hay dibujos colgados que puedes sentir bajo tus dedos: trazos irregulares, como hechos con urgencia.",
+            "descripCorta": "La habitación de los niños. Huele a juguetes viejos y suena una caja de música distorsionada.",
+            "puertas": 1,
+            "posicion": {
+                "x": 0,
+                "y": 6
+            },
+            "objetosEnHabitacion": []
+        }
+    ],
+    "habitacionInicial": {
+        "x": 0,
+        "y": 0
+    },
+    "puertas": [
+        {
+            "id": 1,
+            "abierta": true,
+            "variableNecesaria": 0,
+            "mensajeBloqueada": "",
+            "mensajeAbrir": "",
+            "cuarto1": {
+                "x": 0,
+                "y": 0
+            },
+            "cuarto2": {
+                "x": 1,
+                "y": 0
+            },
+            "descripcionPuerta": ""
+        },
+        {
+            "id": 2,
+            "abierta": true,
+            "variableNecesaria": 0,
+            "mensajeBloqueada": "",
+            "mensajeAbrir": "",
+            "cuarto1": {
+                "x": 1,
+                "y": 0
+            },
+            "cuarto2": {
+                "x": 2,
+                "y": 0
+            },
+            "descripcionPuerta": ""
+        },
+        {
+            "id": 3,
+            "abierta": true,
+            "variableNecesaria": 0,
+            "mensajeBloqueada": "",
+            "mensajeAbrir": "",
+            "cuarto1": {
+                "x": 0,
+                "y": 0
+            },
+            "cuarto2": {
+                "x": 0,
+                "y": 1
+            },
+            "descripcionPuerta": ""
+        },
+        {
+            "id": 4,
+            "abierta": true,
+            "variableNecesaria": 0,
+            "mensajeBloqueada": "",
+            "mensajeAbrir": "",
+            "cuarto1": {
+                "x": 0,
+                "y": 1
+            },
+            "cuarto2": {
+                "x": 0,
+                "y": 2
+            },
+            "descripcionPuerta": ""
+        },
+        {
+            "id": 5,
+            "abierta": true,
+            "variableNecesaria": 0,
+            "mensajeBloqueada": "",
+            "mensajeAbrir": "",
+            "cuarto1": {
+                "x": 0,
+                "y": 2
+            },
+            "cuarto2": {
+                "x": 0,
+                "y": 3
+            },
+            "descripcionPuerta": ""
+        },
+        {
+            "id": 6,
+            "abierta": true,
+            "variableNecesaria": 0,
+            "mensajeBloqueada": "",
+            "mensajeAbrir": "",
+            "cuarto1": {
+                "x": 0,
+                "y": 3
+            },
+            "cuarto2": {
+                "x": 0,
+                "y": 4
+            },
+            "descripcionPuerta": ""
+        },
+        {
+            "id": 7,
+            "abierta": true,
+            "variableNecesaria": 0,
+            "mensajeBloqueada": "",
+            "mensajeAbrir": "",
+            "cuarto1": {
+                "x": 0,
+                "y": 4
+            },
+            "cuarto2": {
+                "x": 0,
+                "y": 5
+            },
+            "descripcionPuerta": ""
+        },
+        {
+            "id": 8,
+            "abierta": true,
+            "variableNecesaria": 0,
+            "mensajeBloqueada": "",
+            "mensajeAbrir": "",
+            "cuarto1": {
+                "x": 0,
+                "y": 5
+            },
+            "cuarto2": {
+                "x": 0,
+                "y": 6
+            },
+            "descripcionPuerta": ""
+        }
+    ]
+}

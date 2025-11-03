@@ -204,10 +204,187 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   numeroHabitaciones: 9
   casa:
-    id: 0
-    habitaciones: []
+    id: 100001
+    habitaciones:
+    - id: 1
+      nombre: Hall
+      descripLarga: Entras al hall de entrada. El aire huele a madera vieja y polvo
+        acumulado. Tus pasos resuenan sobre el suelo de tablones agrietados. A tu
+        alrededor, el silencio es denso, interrumpido solo por el crujido lejano
+        de la estructura. La oscuridad es absoluta, pero percibes el espacio amplio
+        que te rodea.
+      descripCorta: "Est\xE1s en el hall de entrada. El silencio es denso y el aire
+        huele a abandono."
+      puertas: 2
+      posicion: {x: 0, y: 0}
+      objetosEnHabitacion: []
+    - id: 2
+      nombre: Sala
+      descripLarga: "Una habitaci\xF3n amplia y polvorienta. Hueles a madera vieja
+        y polvo. Escuchas el eco de tus pasos en el espacio vac\xEDo. Hay algo que
+        suena como un reloj de p\xE9ndulo marcando el tiempo con un tic-tac irregular.
+        Percibes muebles cubiertos de s\xE1banas y, en la pared, el marco de lo que
+        parece ser un cuadro grande."
+      descripCorta: La sala principal. Polvorienta y silenciosa, excepto por el tic-tac
+        de un reloj.
+      puertas: 2
+      posicion: {x: 1, y: 0}
+      objetosEnHabitacion: []
+    - id: 3
+      nombre: Biblioteca
+      descripLarga: "Una habitaci\xF3n llena de libros antiguos. El aire huele a
+        papel viejo y humedad. Escuchas el crujir de las estanter\xEDas cuando te
+        mueves. Hay un ligero susurro, como si las p\xE1ginas hablaran entre s\xED.
+        Algunos vol\xFAmenes parecen tener sellos extra\xF1os en sus portadas que
+        puedes sentir al tacto."
+      descripCorta: "La biblioteca. Huele a libros antiguos y humedad. Las estanter\xEDas
+        crujen a tu alrededor."
+      puertas: 1
+      posicion: {x: 2, y: 0}
+      objetosEnHabitacion: []
+    - id: 4
+      nombre: Comedor
+      descripLarga: "Una mesa larga domina el centro de la habitaci\xF3n. Tus manos
+        encuentran platos y cubiertos desordenados, cubiertos de polvo. El aire tiene
+        un olor extra\xF1o, mezcla de comida rancia y humedad. Escuchas el goteo
+        constante de agua desde alg\xFAn lugar. Una de las sillas parece estar separada
+        del resto, como si alguien acabara de levantarse."
+      descripCorta: El comedor. Una mesa con platos desordenados y el sonido constante
+        de agua goteando.
+      puertas: 2
+      posicion: {x: 0, y: 1}
+      objetosEnHabitacion: []
+    - id: 5
+      nombre: Cocina
+      descripLarga: "La cocina est\xE1 fr\xEDa. Tus pasos resuenan sobre las baldosas
+        agrietadas. Sientes la estufa oxidada y el refrigerador que ya no funciona.
+        Hay un olor persistente a comida podrida mezclado con algo met\xE1lico. Escuchas
+        un zumbido bajo, como si algo el\xE9ctrico estuviera a punto de encenderse.
+        Los cajones est\xE1n entreabiertos, como si alguien hubiera estado buscando
+        algo con urgencia."
+      descripCorta: "La cocina. Fr\xEDa, con olor a comida podrida y un zumbido el\xE9ctrico
+        constante."
+      puertas: 2
+      posicion: {x: 0, y: 2}
+      objetosEnHabitacion: []
+    - id: 6
+      nombre: "Ba\xF1o"
+      descripLarga: "El ba\xF1o es peque\xF1o y claustrof\xF3bico. El aire est\xE1
+        cargado de humedad y moho. Escuchas el goteo constante de un grifo roto que
+        resuena contra la porcelana. Tus dedos encuentran el lavabo agrietado y el
+        espejo fr\xEDo. Hay un olor a agua estancada. Por un momento, crees escuchar
+        una respiraci\xF3n que no es la tuya."
+      descripCorta: "El ba\xF1o. H\xFAmedo, con olor a moho y el constante goteo
+        de un grifo."
+      puertas: 2
+      posicion: {x: 0, y: 3}
+      objetosEnHabitacion: []
+    - id: 7
+      nombre: "Habitaci\xF3n Principal"
+      descripLarga: "La habitaci\xF3n principal. El aire es pesado, casi sofocante.
+        Tus manos encuentran una cama grande con s\xE1banas h\xFAmedas y fr\xEDas.
+        Hay un tocador con objetos personales: cepillos, frascos de perfume vac\xEDos.
+        En un rinc\xF3n, percibes algo suave y marchito: flores secas. El silencio
+        aqu\xED es diferente, como si la habitaci\xF3n guardara secretos. Escuchas
+        un susurro muy lejano, casi imperceptible."
+      descripCorta: "La habitaci\xF3n principal. Aire pesado, cama con s\xE1banas
+        fr\xEDas y un susurro lejano."
+      puertas: 2
+      posicion: {x: 0, y: 4}
+      objetosEnHabitacion: []
+    - id: 8
+      nombre: "S\xF3tano"
+      descripLarga: "Desciendes al s\xF3tano. El aire es denso, h\xFAmedo y huele
+        a tierra mojada. Cada paso en las escaleras de madera cruje peligrosamente.
+        Abajo, el fr\xEDo es penetrante. Escuchas el goteo de agua filtr\xE1ndose
+        por las paredes de piedra. Hay cajas apiladas, viejas herramientas oxidadas.
+        En el fondo, percibes algo que late suavemente, como un coraz\xF3n enterrado.
+        Este lugar guarda los secretos m\xE1s oscuros de la casa."
+      descripCorta: "El s\xF3tano. Fr\xEDo, h\xFAmedo, con olor a tierra mojada y
+        un latido lejano."
+      puertas: 2
+      posicion: {x: 0, y: 5}
+      objetosEnHabitacion: []
+    - id: 9
+      nombre: "Habitaci\xF3n de los Ni\xF1os"
+      descripLarga: "Entras a la habitaci\xF3n de los ni\xF1os. El aire huele a polvo
+        y juguetes olvidados. Tus pies pisan sobre algo suave, quiz\xE1s peluches
+        tirados en el suelo. Escuchas el crujido de una cama peque\xF1a y el tintineo
+        de una caja de m\xFAsica que suena sola, repitiendo una melod\xEDa infantil
+        distorsionada. Las paredes est\xE1n fr\xEDas. Hay dibujos colgados que puedes
+        sentir bajo tus dedos: trazos irregulares, como hechos con urgencia."
+      descripCorta: "La habitaci\xF3n de los ni\xF1os. Huele a juguetes viejos y
+        suena una caja de m\xFAsica distorsionada."
+      puertas: 1
+      posicion: {x: 0, y: 6}
+      objetosEnHabitacion: []
     habitacionInicial: {x: 0, y: 0}
-    puertas: []
+    puertas:
+    - id: 1
+      abierta: 1
+      variableNecesaria: 0
+      mensajeBloqueada: 
+      mensajeAbrir: 
+      cuarto1: {x: 0, y: 0}
+      cuarto2: {x: 1, y: 0}
+      descripcionPuerta: 
+    - id: 2
+      abierta: 1
+      variableNecesaria: 0
+      mensajeBloqueada: 
+      mensajeAbrir: 
+      cuarto1: {x: 1, y: 0}
+      cuarto2: {x: 2, y: 0}
+      descripcionPuerta: 
+    - id: 3
+      abierta: 1
+      variableNecesaria: 0
+      mensajeBloqueada: 
+      mensajeAbrir: 
+      cuarto1: {x: 0, y: 0}
+      cuarto2: {x: 0, y: 1}
+      descripcionPuerta: 
+    - id: 4
+      abierta: 1
+      variableNecesaria: 0
+      mensajeBloqueada: 
+      mensajeAbrir: 
+      cuarto1: {x: 0, y: 1}
+      cuarto2: {x: 0, y: 2}
+      descripcionPuerta: 
+    - id: 5
+      abierta: 1
+      variableNecesaria: 0
+      mensajeBloqueada: 
+      mensajeAbrir: 
+      cuarto1: {x: 0, y: 2}
+      cuarto2: {x: 0, y: 3}
+      descripcionPuerta: 
+    - id: 6
+      abierta: 1
+      variableNecesaria: 0
+      mensajeBloqueada: 
+      mensajeAbrir: 
+      cuarto1: {x: 0, y: 3}
+      cuarto2: {x: 0, y: 4}
+      descripcionPuerta: 
+    - id: 7
+      abierta: 1
+      variableNecesaria: 0
+      mensajeBloqueada: 
+      mensajeAbrir: 
+      cuarto1: {x: 0, y: 4}
+      cuarto2: {x: 0, y: 5}
+      descripcionPuerta: 
+    - id: 8
+      abierta: 1
+      variableNecesaria: 0
+      mensajeBloqueada: 
+      mensajeAbrir: 
+      cuarto1: {x: 0, y: 5}
+      cuarto2: {x: 0, y: 6}
+      descripcionPuerta: 
+  mapFileName: houseData.json
 --- !u!114 &176073504
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -221,6 +398,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   roomGenerator: {fileID: 176073503}
+  loadFromJson: 1
   numeroHabitaciones: 9
   delayBeforeStart: 3
   maxGenerationRetries: 3
@@ -484,14 +662,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d2cc4609d6b65147a0e536203e4299d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  showCacheDebugLogs: 0
-  showDoorDebugLogs: 0
+  showCacheDebugLogs: 1
+  showDoorDebugLogs: 1
   showMovementLogs: 1
   roomGenerator: {fileID: 176073503}
   fatigueSystem: {fileID: 0}
   gameTimer: {fileID: 872239488}
   inventoryManager: {fileID: 577722745}
   currentPlayerPosition: {x: 0, y: 0}
+  isFullyInitialized: 0
 --- !u!4 &903208444
 Transform:
   m_ObjectHideFlags: 0

@@ -1,10 +1,15 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
 public class RoomGenerator3000 : MonoBehaviour
 {
     public int numeroHabitaciones;
     public House casa;
+    
+    [Header("Serialización")]
+    [Tooltip("Nombre del archivo JSON para guardar/cargar")]
+    public string mapFileName = "houseData.json";
 
     int tamMatriz;
     int[,] habitaciones;
@@ -191,5 +196,189 @@ public class RoomGenerator3000 : MonoBehaviour
                 Gizmos.DrawCube(centroPuerta, Vector3.one * (tamañoCelda * 0.3f));
             }
         }
+    }
+    
+    /// <summary>
+    /// Generar un mapa predefinido y lógico para la campaña
+    /// Layout garantizado con todas las habitaciones conectadas
+    /// </summary>
+    [ContextMenu("Generar Mapa Campaña")]
+    public void GenerarMapaCampana()
+    {
+        casa = new House();
+        casa.id = 100001; // ID fijo para la campaña
+        casa.habitaciones = new List<Room>();
+        casa.puertas = new List<Door>();
+        
+        // LAYOUT EN L INVERTIDA - Navegación Simple y Clara
+        // 9 habitaciones en forma de L con camino directo al sótano
+        //
+        //  X: 0       1       2       3
+        // Y:
+        // 0  [Hall]─────→[Sala]─────→[Biblioteca]
+        //     ↓                          
+        // 1  [Comedor]                  
+        //     ↓                          
+        // 2  [Cocina]                   
+        //     ↓                          
+        // 3  [Baño]                     
+        //     ↓                          
+        // 4  [Hab.Principal]            
+        //     ↓                          
+        // 5  [Sótano]                   
+        //     ↓
+        // 6  [Hab.Niños]
+        
+        // Crear habitaciones (9 total)
+        Room hall = CrearHabitacion(1, new Vector2Int(0, 0), "Hall");                    // INICIO
+        Room sala = CrearHabitacion(2, new Vector2Int(1, 0), "Sala");
+        Room biblioteca = CrearHabitacion(3, new Vector2Int(2, 0), "Biblioteca");
+        Room comedor = CrearHabitacion(4, new Vector2Int(0, 1), "Comedor");
+        Room cocina = CrearHabitacion(5, new Vector2Int(0, 2), "Cocina");
+        Room bano = CrearHabitacion(6, new Vector2Int(0, 3), "Baño");
+        Room habitacionPrincipal = CrearHabitacion(7, new Vector2Int(0, 4), "Habitación Principal");
+        Room sotano = CrearHabitacion(8, new Vector2Int(0, 5), "Sótano");
+        Room habitacionNinos = CrearHabitacion(9, new Vector2Int(0, 6), "Habitación de los Niños");
+        
+        // Añadir a la lista (9 habitaciones)
+        casa.habitaciones.Add(hall);
+        casa.habitaciones.Add(sala);
+        casa.habitaciones.Add(biblioteca);
+        casa.habitaciones.Add(comedor);
+        casa.habitaciones.Add(cocina);
+        casa.habitaciones.Add(bano);
+        casa.habitaciones.Add(habitacionPrincipal);
+        casa.habitaciones.Add(sotano);
+        casa.habitaciones.Add(habitacionNinos);
+        
+        // Establecer habitación inicial (Hall)
+        casa.habitacionInicial = hall.posicion;
+        
+        // Crear puertas - CAMINO EN L SIMPLE Y DIRECTO
+        int doorId = 1;
+        
+        // Pasillo horizontal superior (Hall → Sala → Biblioteca)
+        CrearPuerta(ref doorId, hall.posicion, sala.posicion);         // 1: Hall → derecha → Sala
+        CrearPuerta(ref doorId, sala.posicion, biblioteca.posicion);   // 2: Sala → derecha → Biblioteca
+        
+        // Pasillo vertical (Hall → Comedor → Cocina → Baño → Hab.Principal → Sótano → Hab.Niños)
+        CrearPuerta(ref doorId, hall.posicion, comedor.posicion);                   // 3: Hall → abajo → Comedor
+        CrearPuerta(ref doorId, comedor.posicion, cocina.posicion);                 // 4: Comedor → abajo → Cocina
+        CrearPuerta(ref doorId, cocina.posicion, bano.posicion);                    // 5: Cocina → abajo → Baño
+        CrearPuerta(ref doorId, bano.posicion, habitacionPrincipal.posicion);       // 6: Baño → abajo → Hab.Principal
+        CrearPuerta(ref doorId, habitacionPrincipal.posicion, sotano.posicion);     // 7: Hab.Principal → abajo → Sótano
+        CrearPuerta(ref doorId, sotano.posicion, habitacionNinos.posicion);         // 8: Sótano → abajo → Hab.Niños
+        
+        Debug.Log($"[RoomGenerator] ✅ Mapa de campaña generado: {casa.habitaciones.Count} habitaciones, {casa.puertas.Count} puertas");
+    }
+    
+    private Room CrearHabitacion(int id, Vector2Int posicion, string nombre)
+    {
+        Room room = new Room();
+        room.id = id;
+        room.nombre = nombre;
+        room.posicion = posicion;
+        
+        // Añadir descripciones según el nombre
+        switch (nombre.ToLower())
+        {
+            case "hall":
+                room.descripLarga = "Entras al hall de entrada. El aire huele a madera vieja y polvo acumulado. Tus pasos resuenan sobre el suelo de tablones agrietados. A tu alrededor, el silencio es denso, interrumpido solo por el crujido lejano de la estructura. La oscuridad es absoluta, pero percibes el espacio amplio que te rodea.";
+                room.descripCorta = "Estás en el hall de entrada. El silencio es denso y el aire huele a abandono.";
+                room.puertas = 2; // Sala (derecha), Comedor (abajo)
+                break;
+            case "biblioteca":
+                room.descripLarga = "Una habitación llena de libros antiguos. El aire huele a papel viejo y humedad. Escuchas el crujir de las estanterías cuando te mueves. Hay un ligero susurro, como si las páginas hablaran entre sí. Algunos volúmenes parecen tener sellos extraños en sus portadas que puedes sentir al tacto.";
+                room.descripCorta = "La biblioteca. Huele a libros antiguos y humedad. Las estanterías crujen a tu alrededor.";
+                room.puertas = 1; // Sala (izquierda)
+                break;
+            case "sala":
+                room.descripLarga = "Una habitación amplia y polvorienta. Hueles a madera vieja y polvo. Escuchas el eco de tus pasos en el espacio vacío. Hay algo que suena como un reloj de péndulo marcando el tiempo con un tic-tac irregular. Percibes muebles cubiertos de sábanas y, en la pared, el marco de lo que parece ser un cuadro grande.";
+                room.descripCorta = "La sala principal. Polvorienta y silenciosa, excepto por el tic-tac de un reloj.";
+                room.puertas = 2; // Hall (izquierda), Biblioteca (derecha)
+                break;
+            case "comedor":
+                room.descripLarga = "Una mesa larga domina el centro de la habitación. Tus manos encuentran platos y cubiertos desordenados, cubiertos de polvo. El aire tiene un olor extraño, mezcla de comida rancia y humedad. Escuchas el goteo constante de agua desde algún lugar. Una de las sillas parece estar separada del resto, como si alguien acabara de levantarse.";
+                room.descripCorta = "El comedor. Una mesa con platos desordenados y el sonido constante de agua goteando.";
+                room.puertas = 2; // Hall (arriba), Cocina (abajo)
+                break;
+            case "cocina":
+                room.descripLarga = "La cocina está fría. Tus pasos resuenan sobre las baldosas agrietadas. Sientes la estufa oxidada y el refrigerador que ya no funciona. Hay un olor persistente a comida podrida mezclado con algo metálico. Escuchas un zumbido bajo, como si algo eléctrico estuviera a punto de encenderse. Los cajones están entreabiertos, como si alguien hubiera estado buscando algo con urgencia.";
+                room.descripCorta = "La cocina. Fría, con olor a comida podrida y un zumbido eléctrico constante.";
+                room.puertas = 2; // Comedor (arriba), Baño (abajo)
+                break;
+            case "baño":
+                room.descripLarga = "El baño es pequeño y claustrofóbico. El aire está cargado de humedad y moho. Escuchas el goteo constante de un grifo roto que resuena contra la porcelana. Tus dedos encuentran el lavabo agrietado y el espejo frío. Hay un olor a agua estancada. Por un momento, crees escuchar una respiración que no es la tuya.";
+                room.descripCorta = "El baño. Húmedo, con olor a moho y el constante goteo de un grifo.";
+                room.puertas = 2; // Cocina (arriba), Hab.Principal (abajo)
+                break;
+            case "habitación principal":
+                room.descripLarga = "La habitación principal. El aire es pesado, casi sofocante. Tus manos encuentran una cama grande con sábanas húmedas y frías. Hay un tocador con objetos personales: cepillos, frascos de perfume vacíos. En un rincón, percibes algo suave y marchito: flores secas. El silencio aquí es diferente, como si la habitación guardara secretos. Escuchas un susurro muy lejano, casi imperceptible.";
+                room.descripCorta = "La habitación principal. Aire pesado, cama con sábanas frías y un susurro lejano.";
+                room.puertas = 2; // Baño (arriba), Sótano (abajo)
+                break;
+            case "sótano":
+                room.descripLarga = "Desciendes al sótano. El aire es denso, húmedo y huele a tierra mojada. Cada paso en las escaleras de madera cruje peligrosamente. Abajo, el frío es penetrante. Escuchas el goteo de agua filtrándose por las paredes de piedra. Hay cajas apiladas, viejas herramientas oxidadas. En el fondo, percibes algo que late suavemente, como un corazón enterrado. Este lugar guarda los secretos más oscuros de la casa.";
+                room.descripCorta = "El sótano. Frío, húmedo, con olor a tierra mojada y un latido lejano.";
+                room.puertas = 2; // Hab.Principal (arriba), Hab.Niños (abajo)
+                break;
+            case "habitación de los niños":
+                room.descripLarga = "Entras a la habitación de los niños. El aire huele a polvo y juguetes olvidados. Tus pies pisan sobre algo suave, quizás peluches tirados en el suelo. Escuchas el crujido de una cama pequeña y el tintineo de una caja de música que suena sola, repitiendo una melodía infantil distorsionada. Las paredes están frías. Hay dibujos colgados que puedes sentir bajo tus dedos: trazos irregulares, como hechos con urgencia.";
+                room.descripCorta = "La habitación de los niños. Huele a juguetes viejos y suena una caja de música distorsionada.";
+                room.puertas = 1; // Sótano (arriba)
+                break;
+        }
+        
+        return room;
+    }
+    
+    private void CrearPuerta(ref int doorId, Vector2Int cuarto1, Vector2Int cuarto2)
+    {
+        Door door = new Door();
+        door.id = doorId++;
+        door.cuarto1 = cuarto1;
+        door.cuarto2 = cuarto2;
+        door.abierta = true; // Puertas abiertas por defecto
+        door.variableNecesaria = 0; // Sin requisitos
+        door.mensajeBloqueada = "";
+        door.mensajeAbrir = "";
+        casa.puertas.Add(door);
+    }
+    
+    /// <summary>
+    /// Guardar el mapa generado en JSON
+    /// </summary>
+    [ContextMenu("Guardar Casa JSON")]
+    public void GuardarCasaJson()
+    {
+        if (casa == null)
+        {
+            Debug.LogWarning("No hay una casa generada para guardar.");
+            return;
+        }
+        
+        string json = JsonUtility.ToJson(casa, true);
+        string ruta = Path.Combine(Application.dataPath, mapFileName);
+        File.WriteAllText(ruta, json);
+        Debug.Log($"Casa guardada en: {ruta}\nHabitaciones: {casa.habitaciones.Count}, Puertas: {casa.puertas.Count}");
+    }
+    
+    /// <summary>
+    /// Cargar el mapa desde JSON
+    /// </summary>
+    [ContextMenu("Cargar Casa JSON")]
+    public void CargarCasaJson()
+    {
+        string ruta = Path.Combine(Application.dataPath, mapFileName);
+        
+        if (!File.Exists(ruta))
+        {
+            Debug.LogWarning($"No existe ningún archivo JSON para cargar: {ruta}");
+            return;
+        }
+        
+        string json = File.ReadAllText(ruta);
+        casa = JsonUtility.FromJson<House>(json);
+        Debug.Log($"Casa cargada correctamente desde {ruta}.\nHabitaciones: {casa.habitaciones.Count}, Puertas: {casa.puertas.Count}");
     }
 }

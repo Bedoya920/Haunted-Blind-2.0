@@ -30,17 +30,29 @@ namespace VoiceSystem.GameIntegration
         /// <returns>DoorData si existe una puerta en esa dirección, null si no</returns>
         public DoorData TranslateDirectionToDoor(string direction)
         {
+            Debug.Log($"[DirectionalMovement] 🧭 TranslateDirectionToDoor: '{direction}'");
+            
             if (roomBridge == null)
             {
                 Debug.LogWarning("[DirectionalMovement] RoomSystemBridge no encontrado");
                 return null;
             }
             
-            var currentRoom = roomBridge.GetCurrentRoom();
+            // IMPORTANTE: Obtener habitación actual SIEMPRE RECALCULADA (sin cache)
+            // Esto asegura que las puertas estén actualizadas después de cada movimiento
+            var currentRoom = roomBridge.GetCurrentRoomFresh();
             if (currentRoom == null)
             {
                 Debug.LogWarning("[DirectionalMovement] No hay habitación actual");
                 return null;
+            }
+            
+            Debug.Log($"[DirectionalMovement] Habitación actual: {currentRoom.roomName}, Puertas: {currentRoom.doors.Count}");
+            
+            // Mostrar TODAS las puertas disponibles
+            foreach (var d in currentRoom.doors)
+            {
+                Debug.Log($"   - Puerta: {d.doorName} | Dirección: '{d.direction}' | ID: {d.doorId} | Bloqueada: {d.isLocked}");
             }
             
             // Traducir dirección relativa a cardinal
@@ -48,20 +60,22 @@ namespace VoiceSystem.GameIntegration
             
             if (string.IsNullOrEmpty(cardinalDirection))
             {
-                LogDebug($"[DirectionalMovement] Dirección '{direction}' no reconocida");
+                Debug.LogWarning($"[DirectionalMovement] ❌ Dirección '{direction}' no reconocida");
                 return null;
             }
+            
+            Debug.Log($"[DirectionalMovement] '{direction}' → '{cardinalDirection}'");
             
             // Buscar puerta en la dirección cardinal
             var door = currentRoom.GetDoorByDirection(cardinalDirection);
             
             if (door != null)
             {
-                LogDebug($"[DirectionalMovement] '{direction}' → '{cardinalDirection}' → Puerta encontrada: {door.doorName}");
+                Debug.Log($"[DirectionalMovement] ✅ Puerta encontrada: {door.doorName} (ID: {door.doorId})");
             }
             else
             {
-                LogDebug($"[DirectionalMovement] '{direction}' → '{cardinalDirection}' → No hay puerta en esa dirección");
+                Debug.LogWarning($"[DirectionalMovement] ❌ No hay puerta en dirección '{cardinalDirection}'");
             }
             
             return door;
