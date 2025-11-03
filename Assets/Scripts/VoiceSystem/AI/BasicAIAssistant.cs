@@ -83,8 +83,8 @@ namespace VoiceSystem.AI
                 {"cómo salir", "Para escapar, necesitas encontrar la flor de loto. Explora las habitaciones y busca pistas."},
                 
                 // Information command - Complete situation report
-                {"información", "Estás en {location}. {location_description}. Tienes {health} de vida y {actions} acciones disponibles. Tu inventario contiene: {inventory}. Comandos disponibles: adelante, atrás, izquierda, derecha, inspeccionar, tomar, usar, comer, dar, leer, ayuda, información."},
-                {"info", "Ubicación: {location}. Vida: {health}/5. Acciones: {actions}. Inventario: {inventory}. Di 'ayuda' para ver los comandos."},
+                {"información", "Estás en {location}. {location_description}. Tienes {health} de vida y {actions} acciones disponibles. Tu inventario contiene: {inventory}. Movimientos disponibles: {available_movement_directions}. Otras acciones: inspeccionar, tomar, usar, comer, dar, leer, ayuda."},
+                {"info", "Ubicación: {location}. Vida: {health}/5. Acciones: {actions}. Inventario: {inventory}. Puedes moverte: {available_movement_directions}. Di 'ayuda' para ver más comandos."},
                 {"estado", "Tu estado: Vida {health}/5, Acciones {actions}/{max_actions}, Fatiga {fatigue}. Estás en {location}."},
                 {"situación", "Estás en {location}. {location_description}. Tienes {health} de vida, {actions} acciones, y llevas: {inventory}."},
                 
@@ -93,22 +93,26 @@ namespace VoiceSystem.AI
                 {"qué tengo", "Tienes: {inventory}. También tienes {actions} acciones disponibles."},
                 
                 // Door queries
-                {"qué puertas hay", "Las puertas disponibles son: {available_doors}."},
-                {"cuántas puertas hay", "Hay {door_count} puertas en esta habitación: {available_doors}."},
-                {"qué puertas", "Puedes ver las siguientes puertas: {available_doors}."},
-                {"puertas", "Las puertas de esta habitación: {available_doors}."},
+                {"qué puertas hay", "Puedes moverte hacia: {available_movement_directions}. Puertas: {available_doors}."},
+                {"cuántas puertas hay", "Hay {door_count} puertas. Puedes ir: {available_movement_directions}."},
+                {"qué puertas", "Direcciones disponibles: {available_movement_directions}. Puertas: {available_doors}."},
+                {"puertas", "Puedes moverte: {available_movement_directions}."},
                 {"inspeccionar puerta", "Examinas la puerta. {door_description}"},
                 {"ver puerta", "{door_description}"},
                 {"está bloqueada", "{door_lock_status}"},
                 {"puerta bloqueada", "{door_lock_status}"},
                 
-                // Movement commands
-                {"adelante", "Avanzas hacia adelante. [CMD:adelante]"},
-                {"atrás", "Retrocedes. [CMD:atrás]"},
-                {"izquierda", "Te mueves hacia la izquierda. [CMD:izquierda]"},
-                {"derecha", "Te mueves hacia la derecha. [CMD:derecha]"},
-                {"subir", "Subes las escaleras. [CMD:subir]"},
-                {"bajar", "Bajas las escaleras. [CMD:bajar]"},
+                // Movement commands - Solo extraer comando, sin respuesta de texto
+                {"adelante", "[CMD:arriba]"},
+                {"arriba", "[CMD:arriba]"},
+                {"atrás", "[CMD:abajo]"},
+                {"atras", "[CMD:abajo]"},
+                {"abajo", "[CMD:abajo]"},
+                {"izquierda", "[CMD:izquierda]"},
+                {"derecha", "[CMD:derecha]"},
+                {"frente", "[CMD:arriba]"},
+                {"subir", "[CMD:subir]"},
+                {"bajar", "[CMD:bajar]"},
                 
                 // Interaction commands
                 {"inspeccionar", "Inspeccionas tu entorno. [CMD:inspeccionar]"},
@@ -186,8 +190,11 @@ namespace VoiceSystem.AI
                 {
                     var parsedResponse = responseParser.ParseResponse(response);
                     
-                    // Fire events
-                    OnResponseGenerated?.Invoke(parsedResponse.cleanText);
+                    // Fire events - Solo si hay texto que hablar
+                    if (!string.IsNullOrWhiteSpace(parsedResponse.cleanText))
+                    {
+                        OnResponseGenerated?.Invoke(parsedResponse.cleanText);
+                    }
                     
                     foreach (string command in parsedResponse.extractedCommands)
                     {
@@ -263,14 +270,26 @@ namespace VoiceSystem.AI
             response = response.Replace("{room_long_description}", context.currentRoom?.longDescription ?? GetLocationDescription(context.currentLocation));
             response = response.Replace("{available_doors}", GetDoorsText(context.GetAvailableDoors()));
             response = response.Replace("{door_count}", context.GetAvailableDoors().Count.ToString());
+            response = response.Replace("{available_movement_directions}", GetMovementDirectionsText(context.GetAvailableDoors()));
             
-            // Player state placeholders
-            response = response.Replace("{inventory}", GetInventoryText(context.inventory));
-            response = response.Replace("{health}", context.health.ToString());
+            // Player state placeholders - usar PlayerStateManager para datos REALES
+            var playerState = PlayerStateManager.Instance;
+            if (playerState != null)
+            {
+                response = response.Replace("{inventory}", GetInventoryText(playerState.Inventory));
+                response = response.Replace("{health}", playerState.Health.ToString());
+                response = response.Replace("{fatigue}", playerState.Fatigue.ToString());
+            }
+            else
+            {
+                response = response.Replace("{inventory}", GetInventoryText(context.inventory));
+                response = response.Replace("{health}", context.health.ToString());
+                response = response.Replace("{fatigue}", context.fatigue.ToString());
+            }
+            
             response = response.Replace("{max_health}", context.maxHealth.ToString());
-            response = response.Replace("{actions}", context.actions.ToString());
-            response = response.Replace("{max_actions}", context.maxActions.ToString());
-            response = response.Replace("{fatigue}", context.fatigue.ToString());
+            response = response.Replace("{actions}", context.fatigue.ToString()); // Fatiga ES el sistema de acciones
+            response = response.Replace("{max_actions}", "25"); // Max fatiga antes de muerte
             response = response.Replace("{gameTime}", context.gameTime);
             response = response.Replace("{timeRemaining}", context.timeRemaining.ToString("F1"));
             response = response.Replace("{available_commands}", GetAvailableCommandsText(context));
@@ -336,8 +355,15 @@ namespace VoiceSystem.AI
                 }
             }
             
-            // Default response
-            return "No estoy seguro de lo que quieres hacer. Puedes preguntarme por ayuda o usar comandos como 'inspeccionar', 'adelante', 'atrás', 'información', 'qué puertas hay', 'buscar', etc.";
+            // Default response con comandos VÁLIDOS
+            var validator = VoiceSystem.GameIntegration.CommandValidator.Instance;
+            if (validator != null)
+            {
+                return validator.GetValidCommandsDescription();
+            }
+            
+            // Fallback
+            return "No estoy seguro de lo que quieres hacer. Di 'ayuda' para ver comandos disponibles";
         }
         
         /// <summary>
@@ -346,6 +372,46 @@ namespace VoiceSystem.AI
         private string TryProcessDoorQuery(string userInput, GameContext context)
         {
             string lowerInput = userInput.ToLower().Trim();
+            
+            // Check for general door queries FIRST
+            if (lowerInput.Contains("qué puertas") || lowerInput.Contains("que puertas") || 
+                lowerInput.Contains("puertas disponibles") || lowerInput.Contains("puertas hay") ||
+                lowerInput.Contains("dónde puedo ir") || lowerInput.Contains("donde puedo ir"))
+            {
+                // Get REAL doors from RoomSystemBridge
+                var roomBridge = VoiceSystem.GameIntegration.RoomSystemBridge.Instance;
+                if (roomBridge == null)
+                {
+                    return "No puedo acceder a la información de puertas";
+                }
+                
+                var currentRoom = roomBridge.GetCurrentRoom();
+                if (currentRoom == null || currentRoom.doors == null || currentRoom.doors.Count == 0)
+                {
+                    return "No hay puertas visibles en esta habitación";
+                }
+                
+                // List REAL doors with directions
+                var doorList = new System.Text.StringBuilder("Puertas disponibles: ");
+                for (int i = 0; i < currentRoom.doors.Count; i++)
+                {
+                    var door = currentRoom.doors[i];
+                    string relativeDir = TranslateCardinalToRelative(door.direction);
+                    
+                    doorList.Append($"{relativeDir} hacia {door.doorName}");
+                    if (door.isLocked)
+                    {
+                        doorList.Append(" (bloqueada)");
+                    }
+                    
+                    if (i < currentRoom.doors.Count - 1)
+                    {
+                        doorList.Append(", ");
+                    }
+                }
+                
+                return doorList.ToString();
+            }
             
             // Extract direction or door name from input
             string[] directions = { "norte", "sur", "este", "oeste" };
@@ -375,7 +441,9 @@ namespace VoiceSystem.AI
                 }
                 
                 // No direction specified, list all doors
-                return $"¿Qué puerta quieres inspeccionar? Las puertas disponibles son: {GetDoorsText(context.GetAvailableDoors())}";
+                var roomBridge = VoiceSystem.GameIntegration.RoomSystemBridge.Instance;
+                var currentRoom = roomBridge?.GetCurrentRoom();
+                return $"¿Qué puerta quieres inspeccionar? Las puertas disponibles son: {GetDoorsText(currentRoom?.doors)}";
             }
             
             // "abrir puerta [dirección]" or "usar puerta [dirección]"
@@ -425,6 +493,26 @@ namespace VoiceSystem.AI
         }
         
         /// <summary>
+        /// Traduce dirección del mapa a comando de voz
+        /// </summary>
+        private string TranslateCardinalToRelative(string cardinal)
+        {
+            switch (cardinal.ToLower())
+            {
+                case "arriba": return "arriba";
+                case "abajo": return "abajo";
+                case "derecha": return "derecha";
+                case "izquierda": return "izquierda";
+                // Legacy support
+                case "norte": return "arriba";
+                case "sur": return "abajo";
+                case "este": return "derecha";
+                case "oeste": return "izquierda";
+                default: return cardinal;
+            }
+        }
+        
+        /// <summary>
         /// Get formatted text for doors list
         /// </summary>
         private string GetDoorsText(List<DoorData> doors)
@@ -439,6 +527,30 @@ namespace VoiceSystem.AI
             );
             
             return string.Join(", ", doorDescriptions);
+        }
+        
+        /// <summary>
+        /// Obtiene las direcciones de movimiento disponibles (arriba, abajo, izquierda, derecha)
+        /// </summary>
+        private string GetMovementDirectionsText(List<DoorData> doors)
+        {
+            if (doors == null || doors.Count == 0)
+            {
+                return "ninguna dirección (no hay puertas)";
+            }
+            
+            var directions = doors
+                .Where(d => !d.isLocked) // Solo puertas desbloqueadas
+                .Select(d => d.direction)
+                .Distinct()
+                .OrderBy(dir => dir); // Ordenar alfabéticamente
+            
+            if (!directions.Any())
+            {
+                return "ninguna dirección (todas las puertas están bloqueadas)";
+            }
+            
+            return string.Join(", ", directions);
         }
         
         /// <summary>

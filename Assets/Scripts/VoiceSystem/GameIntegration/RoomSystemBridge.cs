@@ -12,6 +12,40 @@ namespace VoiceSystem.GameIntegration
     /// </summary>
     public class RoomSystemBridge : MonoBehaviour, IRoomSystemProvider
     {
+        // Singleton
+        private static RoomSystemBridge _instance;
+        private static bool _isInitialized = false;
+        
+        [Header("Debug Settings")]
+        [SerializeField] private bool showCacheDebugLogs = false; // Logs de cache
+        [SerializeField] private bool showDoorDebugLogs = false;  // Logs de búsqueda de puertas
+        [SerializeField] private bool showMovementLogs = true;    // Logs de movimiento del jugador
+        
+        public static RoomSystemBridge Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindFirstObjectByType<RoomSystemBridge>();
+                    if (_instance == null)
+                    {
+                        var go = new GameObject("RoomSystemBridge");
+                        _instance = go.AddComponent<RoomSystemBridge>();
+                        DontDestroyOnLoad(go);
+                    }
+                }
+                
+                // CRÍTICO: Asegurar que InitializeBridge se llame aunque Awake no haya corrido
+                if (!_isInitialized && _instance != null)
+                {
+                    _instance.EnsureCachesInitialized();
+                }
+                
+                return _instance;
+            }
+        }
+        
         [Header("Referencias")]
         [SerializeField] private RoomGenerator3000 roomGenerator;
         [SerializeField] private FatigueSystem fatigueSystem;
@@ -22,9 +56,10 @@ namespace VoiceSystem.GameIntegration
         [Tooltip("Posición actual del jugador en la matriz")]
         public Vector2Int currentPlayerPosition;
         
-        // Eventos
+        // Eventos (implementados de IRoomSystemProvider)
         public event System.Action<RoomData> OnRoomChanged;
         public event System.Action<DoorData> OnDoorStateChanged;
+        public event System.Action<string> OnItemCollected; // Se dispara en TryMoveThroughDoor cuando se usa llave
         
         // Cache para evitar conversiones repetidas
         private Dictionary<int, RoomData> roomDataCache;
@@ -33,31 +68,128 @@ namespace VoiceSystem.GameIntegration
         
         void Awake()
         {
+            // Singleton pattern
+            if (_instance == null)
+            {
+                _instance = this;
+                DontDestroyOnLoad(gameObject);
+                InitializeBridge();
+                _isInitialized = true;
+                Debug.Log("[RoomBridge] Awake() ejecutado - Singleton inicializado");
+            }
+            else if (_instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+        }
+        
+        private void InitializeBridge()
+        {
+            Debug.Log("[RoomBridge] InitializeBridge() llamado");
+            
             roomDataCache = new Dictionary<int, RoomData>();
             doorDataCache = new Dictionary<int, DoorData>();
             visitedRooms = new HashSet<Vector2Int>();
             
             // Validar referencias
             if (roomGenerator == null)
-                Debug.LogError("[RoomBridge] Falta asignar RoomGenerator3000");
+                Debug.LogWarning("[RoomBridge] RoomGenerator3000 no asignado - será buscado en Start");
             
             // Obtener o crear RoomInventoryManager
             if (inventoryManager == null)
             {
                 inventoryManager = RoomInventoryManager.Instance;
             }
+            
+            Debug.Log("[RoomBridge] ✅ Singleton inicializado - Caches creados");
+        }
+        
+        /// <summary>
+        /// Asegurar que los caches están inicializados (llamar al principio de métodos críticos)
+        /// </summary>
+        private void EnsureCachesInitialized()
+        {
+            bool needsInit = false;
+            
+            if (roomDataCache == null)
+            {
+                roomDataCache = new Dictionary<int, RoomData>();
+                needsInit = true;
+            }
+            
+            if (doorDataCache == null)
+            {
+                doorDataCache = new Dictionary<int, DoorData>();
+                needsInit = true;
+            }
+            
+            if (visitedRooms == null)
+            {
+                visitedRooms = new HashSet<Vector2Int>();
+                needsInit = true;
+            }
+            
+            if (needsInit)
+            {
+                Debug.LogWarning("[RoomBridge] ⚠️ Caches inicializados tardíamente (Awake no corrió primero)");
+                _isInitialized = true;
+            }
         }
         
         void Start()
         {
-            // Esperar a que el generador cree la casa
-            if (roomGenerator != null && roomGenerator.casa != null)
-            {
-                // Posición inicial del jugador = habitación inicial de la casa
-                currentPlayerPosition = roomGenerator.casa.habitacionInicial;
-                visitedRooms.Add(currentPlayerPosition);
+            // Solo buscar referencias, NO acceder a roomGenerator.casa
+            if (roomGenerator == null)
+                roomGenerator = FindFirstObjectByType<RoomGenerator3000>();
+            
+            if (inventoryManager == null)
+                inventoryManager = RoomInventoryManager.Instance;
+            
+            if (fatigueSystem == null)
+                fatigueSystem = FatigueSystem.Instance;
                 
-                Debug.Log($"[RoomBridge] Jugador inicia en: {currentPlayerPosition}");
+            if (gameTimer == null)
+                gameTimer = GameTimer.Instance;
+            
+            // NO inicializar posición aquí - esperar a SetRoomGenerator()
+            Debug.Log("[RoomBridge] Start() completado - esperando inicialización de casa");
+        }
+        
+        /// <summary>
+        /// Asignar RoomGenerator manualmente (útil para GameInitializer)
+        /// </summary>
+        public void SetRoomGenerator(RoomGenerator3000 generator)
+        {
+            EnsureCachesInitialized(); // CRÍTICO: Asegurar caches antes de todo
+            
+            if (generator == null)
+            {
+                Debug.LogError("[RoomBridge] SetRoomGenerator recibió null generator");
+                return;
+            }
+            
+            if (generator.casa == null)
+            {
+                Debug.LogError("[RoomBridge] SetRoomGenerator: generator.casa es null");
+                return;
+            }
+            
+            roomGenerator = generator;
+            currentPlayerPosition = generator.casa.habitacionInicial;
+            
+            visitedRooms.Clear();
+            visitedRooms.Add(currentPlayerPosition);
+            ClearCache();
+            
+            Debug.Log($"[RoomBridge] ✅ RoomGenerator asignado. Habitación inicial: {currentPlayerPosition}, Total habitaciones: {generator.casa.habitaciones.Count}, Total puertas: {generator.casa.puertas.Count}");
+            
+            // NUEVO: Verificar puertas de la habitación inicial
+            var doorsInStart = GetDoorsForRoom(currentPlayerPosition);
+            Debug.Log($"[RoomBridge] Puertas en habitación inicial: {doorsInStart.Count}");
+            foreach (var door in doorsInStart)
+            {
+                Debug.Log($"  - {door.doorName} hacia {door.direction}");
             }
         }
         
@@ -68,11 +200,24 @@ namespace VoiceSystem.GameIntegration
         /// </summary>
         private RoomData ConvertToRoomData(Room generatorRoom)
         {
-            if (generatorRoom == null) return null;
+            EnsureCachesInitialized(); // CRÍTICO: Llamar siempre primero
+            
+            if (generatorRoom == null)
+            {
+                Debug.LogError("[RoomBridge] ConvertToRoomData: generatorRoom es null");
+                return null;
+            }
             
             // Check cache
             if (roomDataCache.TryGetValue(generatorRoom.id, out RoomData cached))
+            {
+                if (showCacheDebugLogs)
+                    Debug.Log($"[RoomBridge] ConvertToRoomData: Usando cache para room ID:{generatorRoom.id}");
                 return cached;
+            }
+            
+            if (showCacheDebugLogs)
+                Debug.Log($"[RoomBridge] ConvertToRoomData: Creando RoomData para room ID:{generatorRoom.id} en posición {generatorRoom.posicion}");
             
             var roomData = new RoomData
             {
@@ -114,6 +259,9 @@ namespace VoiceSystem.GameIntegration
                 roomData.metadata["totalItems"] = roomInventory.items.Count.ToString();
             }
             
+            if (showCacheDebugLogs)
+                Debug.Log($"[RoomBridge] RoomData creado: {roomData.roomName} con {roomData.doors.Count} puertas");
+            
             // Cache
             roomDataCache[generatorRoom.id] = roomData;
             return roomData;
@@ -128,22 +276,46 @@ namespace VoiceSystem.GameIntegration
         /// </summary>
         private List<DoorData> GetDoorsForRoom(Vector2Int roomPosition)
         {
+            EnsureCachesInitialized(); // CRÍTICO: Asegurar caches
+            
             var doors = new List<DoorData>();
             
-            if (roomGenerator == null || roomGenerator.casa == null)
+            if (roomGenerator == null || roomGenerator.casa == null || roomGenerator.casa.puertas == null)
+            {
+                Debug.LogWarning($"[RoomBridge] GetDoorsForRoom: generator, casa, o puertas es null");
                 return doors;
+            }
+            
+            if (showDoorDebugLogs)
+                Debug.Log($"[RoomBridge] Buscando puertas para posición {roomPosition}. Total puertas en casa: {roomGenerator.casa.puertas.Count}");
             
             foreach (var door in roomGenerator.casa.puertas)
             {
-                // Verificar si esta puerta conecta con esta habitación
-                if (door.cuarto1 == roomPosition || door.cuarto2 == roomPosition)
+                // DIAGNÓSTICO: Log de cada puerta
+                bool matches1 = door.cuarto1 == roomPosition;
+                bool matches2 = door.cuarto2 == roomPosition;
+                
+                if (showDoorDebugLogs)
+                    Debug.Log($"[RoomBridge]   Puerta ID:{door.id} - cuarto1:{door.cuarto1} cuarto2:{door.cuarto2} | Match1:{matches1} Match2:{matches2}");
+                
+                if (matches1 || matches2)
                 {
                     var doorData = ConvertToDoorData(door, roomPosition);
                     if (doorData != null)
+                    {
                         doors.Add(doorData);
+                        if (showDoorDebugLogs)
+                            Debug.Log($"[RoomBridge]     ✅ Puerta añadida: {doorData.doorName} hacia {doorData.direction}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[RoomBridge]     ⚠️ ConvertToDoorData retornó null para puerta ID:{door.id}");
+                    }
                 }
             }
             
+            if (showDoorDebugLogs)
+                Debug.Log($"[RoomBridge] Total puertas encontradas: {doors.Count}");
             return doors;
         }
         
@@ -152,6 +324,8 @@ namespace VoiceSystem.GameIntegration
         /// </summary>
         private DoorData ConvertToDoorData(Door generatorDoor, Vector2Int fromRoom)
         {
+            EnsureCachesInitialized(); // CRÍTICO: Llamar siempre primero
+            
             if (generatorDoor == null) return null;
             
             // Check cache
@@ -204,18 +378,21 @@ namespace VoiceSystem.GameIntegration
             int deltaX = to.x - from.x;
             int deltaY = to.y - from.y;
             
+            // Usar direcciones VISUALES del mapa (arriba/abajo/izquierda/derecha)
+            // En el mapa: Y aumenta hacia ABAJO, X aumenta hacia la DERECHA
+            
             // Priorizar eje más significativo
             if (Mathf.Abs(deltaX) > Mathf.Abs(deltaY))
             {
-                return deltaX > 0 ? "este" : "oeste";
+                return deltaX > 0 ? "derecha" : "izquierda";
             }
             else if (Mathf.Abs(deltaY) > Mathf.Abs(deltaX))
             {
-                return deltaY > 0 ? "sur" : "norte"; // Y aumenta hacia abajo en matriz
+                return deltaY > 0 ? "abajo" : "arriba";
             }
             else if (deltaX != 0)
             {
-                return deltaX > 0 ? "este" : "oeste";
+                return deltaX > 0 ? "derecha" : "izquierda";
             }
             
             return "aquí"; // Misma posición (no debería pasar)
@@ -238,7 +415,21 @@ namespace VoiceSystem.GameIntegration
         
         public RoomData GetCurrentRoom()
         {
+            EnsureCachesInitialized(); // CRÍTICO: Asegurar caches
+            
+            if (roomGenerator == null || roomGenerator.casa == null)
+            {
+                Debug.LogError("[RoomBridge] GetCurrentRoom: roomGenerator o casa es null!");
+                return null;
+            }
+            
             Room generatorRoom = FindRoomAtPosition(currentPlayerPosition);
+            if (generatorRoom == null)
+            {
+                Debug.LogError($"[RoomBridge] GetCurrentRoom: No se encontró habitación en posición {currentPlayerPosition}");
+                return null;
+            }
+            
             return ConvertToRoomData(generatorRoom);
         }
         
@@ -308,11 +499,19 @@ namespace VoiceSystem.GameIntegration
             currentPlayerPosition = newPosition;
             visitedRooms.Add(newPosition);
             
-            Debug.Log($"[RoomBridge] Jugador se movió de {previousPosition} a {newPosition}");
+            if (showMovementLogs)
+                Debug.Log($"[RoomBridge] 🎮 Jugador: {previousPosition} → {newPosition}");
             
             // Disparar evento
             RoomData newRoomData = ConvertToRoomData(destinationRoom);
             OnRoomChanged?.Invoke(newRoomData);
+            
+            // Sync with PlayerStateManager
+            var playerState = PlayerStateManager.Instance;
+            if (playerState != null)
+            {
+                playerState.UpdatePosition(newPosition, newRoomData);
+            }
             
             return true;
         }

@@ -52,8 +52,12 @@ namespace VoiceSystem.Core.Data
             // Initialize default commands
             availableCommands.AddRange(new string[] 
             {
-                "adelante", "atrás", "izquierda", "derecha",
+                // Direcciones (arriba/abajo son los comandos principales, adelante/atrás son alias)
+                "arriba", "abajo", "izquierda", "derecha",
+                "adelante", "atrás", "atras", "frente",
+                // Acciones de interacción
                 "inspeccionar", "tomar", "usar", "comer", "leer", "dar",
+                // Comandos especiales
                 "renacer", "despertar", "ayuda", "inventario"
             });
         }

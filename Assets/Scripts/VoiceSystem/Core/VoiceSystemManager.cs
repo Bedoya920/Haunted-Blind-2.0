@@ -32,7 +32,7 @@ namespace VoiceSystem.Core
         public AIPromptTemplates promptTemplates;
         
         [Header("Debug")]
-        public bool enableDebugLogs = true;
+        public bool enableDebugLogs = false; // Deshabilitado por defecto para mejor debugging
         public bool autoStartListening = false; // Disabled by default to prevent conflicts
         
         [Header("Game Pause Settings")]
@@ -47,6 +47,8 @@ namespace VoiceSystem.Core
         // State
         public bool IsInitialized { get; private set; }
         public bool IsListening { get; private set; }
+        private bool isProcessingCommand = false; // Prevenir llamadas múltiples
+        private System.Collections.Generic.Queue<string> commandQueue = new System.Collections.Generic.Queue<string>();
         
         // Singleton
         public static VoiceSystemManager Instance { get; private set; }
@@ -305,11 +307,49 @@ namespace VoiceSystem.Core
             LogDebug($"Speech recognized: {text}");
             OnPlayerSpoke?.Invoke(text);
             
+            // Añadir a cola de comandos
+            if (isProcessingCommand)
+            {
+                LogDebug($"[VoiceSystem] Comando en cola: {text}");
+                commandQueue.Enqueue(text);
+                return;
+            }
+            
+            // Procesar inmediatamente si no hay otro comando ejecutándose
+            ProcessCommand(text);
+        }
+        
+        private void ProcessCommand(string text)
+        {
+            if (isProcessingCommand)
+            {
+                return; // Ya hay un comando procesándose
+            }
+            
+            isProcessingCommand = true;
+            
             // Process with AI
             if (aiAssistant != null && contextProvider != null)
             {
                 var context = contextProvider.GetCurrentContext();
                 aiAssistant.ProcessInput(text, context);
+            }
+        }
+        
+        private void Update()
+        {
+            // Procesar siguiente comando de la cola si terminó el anterior
+            if (!isProcessingCommand && commandQueue.Count > 0)
+            {
+                string nextCommand = commandQueue.Dequeue();
+                LogDebug($"[VoiceSystem] Procesando siguiente comando de la cola: {nextCommand}");
+                ProcessCommand(nextCommand);
+            }
+            
+            // Resetear flag si el AI terminó de procesar
+            if (isProcessingCommand && aiAssistant != null && !aiAssistant.IsProcessing)
+            {
+                isProcessingCommand = false;
             }
         }
         

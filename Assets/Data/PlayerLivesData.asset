@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: PlayerLivesData
   m_EditorClassIdentifier: 
   totalLives: 5
-  currentLives: 4
+  currentLives: 5

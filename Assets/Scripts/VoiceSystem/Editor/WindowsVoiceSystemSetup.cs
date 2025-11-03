@@ -124,9 +124,9 @@ namespace VoiceSystem.Editor
                 return;
             }
             
-            // Create GamePauseManager (will be auto-created as singleton when accessed)
-            var pauseManager = GamePauseManager.Instance;
-            Debug.Log("✅ GamePauseManager creado automáticamente");
+            // Note: GamePauseManager se crea automáticamente como Singleton en Play Mode
+            // No lo creamos aquí porque DontDestroyOnLoad solo funciona en Play Mode
+            Debug.Log("✅ GamePauseManager se creará automáticamente en Play Mode");
         }
         
         private static void CreateConfigurations()

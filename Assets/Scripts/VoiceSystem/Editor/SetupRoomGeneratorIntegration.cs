@@ -118,23 +118,59 @@ namespace VoiceSystem.Editor
                 Debug.Log($"✅ ConsumiblesManager Singleton: {(consumablesManagerSingleton != null ? "OK" : "FALLO")}");
                 Debug.Log($"✅ RoomInventoryManager Singleton: {(inventoryManager != null ? "OK" : "FALLO")}");
                 
+                // 7. Crear EventTriggerSystem si no existe
+                Debug.Log("=== CONFIGURANDO SISTEMA DE EVENTOS ===");
+                
+                var eventTrigger = Object.FindFirstObjectByType<VoiceSystem.GameIntegration.EventTriggerSystem>();
+                if (eventTrigger == null)
+                {
+                    var triggerGO = new GameObject("EventTriggerSystem");
+                    eventTrigger = triggerGO.AddComponent<VoiceSystem.GameIntegration.EventTriggerSystem>();
+                    Debug.Log("✅ EventTriggerSystem creado");
+                }
+                else
+                {
+                    Debug.Log("✅ EventTriggerSystem ya existe");
+                }
+                
+                // 8. Asegurar EventManager Singleton
+                var eventManager = EventManager.Instance;
+                Debug.Log($"✅ EventManager Singleton: {(eventManager != null ? "OK" : "FALLO")}");
+                
+                // 9. Asegurar ActionConfirmationManager Singleton
+                var confirmationManager = VoiceSystem.GameIntegration.ActionConfirmationManager.Instance;
+                Debug.Log($"✅ ActionConfirmationManager Singleton: {(confirmationManager != null ? "OK" : "FALLO")}");
+                
                 Debug.Log("=== INTEGRACIÓN COMPLETADA ===");
                 
                 EditorUtility.DisplayDialog(
                     "Integración Completa", 
                     "✅ RoomSystemBridge configurado\n" +
                     "✅ RoomInventoryManager configurado\n" +
+                    "✅ EventTriggerSystem configurado\n" +
                     "✅ Referencias asignadas correctamente\n" +
                     "✅ GameContextProvider conectado\n\n" +
                     "El sistema de voz ahora usará:\n" +
                     "• Habitaciones reales del generador procedural\n" +
                     "• Sistema de items con búsqueda de ocultos\n" +
-                    "• Consumibles automáticos\n\n" +
+                    "• Consumibles automáticos\n" +
+                    "• Eventos narrados automáticamente\n\n" +
                     "Singletons optimizados:\n" +
                     "✅ GameTimer\n" +
                     "✅ FatigueSystem\n" +
                     "✅ ConsumiblesManager\n" +
-                    "✅ RoomInventoryManager\n\n" +
+                    "✅ RoomInventoryManager\n" +
+                    "✅ EventManager\n" +
+                    "✅ ActionConfirmationManager\n\n" +
+                    "Triggers automáticos:\n" +
+                    "• Eventos cada intervalo del GameTimer\n" +
+                    "• Eventos al cambiar de habitación\n" +
+                    "• Eventos específicos por roomId\n\n" +
+                    "Confirmaciones de acciones:\n" +
+                    "• Comer: Confirma qué comiste y cuánto recuperaste\n" +
+                    "• Tomar: Confirma qué tomaste y tipo de item\n" +
+                    "• Buscar: Confirma qué encontraste o si no hay nada\n" +
+                    "• Puertas: Confirma si usaste puerta o está bloqueada\n\n" +
                     "IMPORTANTE: Asegúrate de ejecutar el generador (Iniciar) antes de usar el sistema de voz.", 
                     "Perfecto"
                 );

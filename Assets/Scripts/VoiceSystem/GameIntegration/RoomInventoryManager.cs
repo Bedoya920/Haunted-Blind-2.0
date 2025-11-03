@@ -177,7 +177,15 @@ namespace VoiceSystem.GameIntegration
             
             // Marcar como recogido
             item.isCollected = true;
-            LogDebug($"[RoomInventory] Item recogido: {item.itemName} de {roomId}");
+            
+            // Añadir a PlayerStateManager (sincroniza PlayerData + GameContext)
+            var playerState = PlayerStateManager.Instance;
+            if (playerState != null)
+            {
+                playerState.AddItem(itemId);
+            }
+            
+            LogDebug($"[RoomInventory] ✅ Item recogido: {item.itemName} de {roomId} → Añadido al inventario persistente");
             
             return true;
         }

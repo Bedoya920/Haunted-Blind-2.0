@@ -20,6 +20,7 @@ public class FatigueSystem : MonoBehaviour
     
     [Header("Referencias")]
     [SerializeField] private PlayerLivesData playerLives;
+    [SerializeField] private VoiceSystem.Core.Data.PlayerData playerData; // Persistencia entre sesiones
     [SerializeField] private GameTimer gameTimer;
     [SerializeField] private ConsumiblesManager consumiblesManager;
 
@@ -52,7 +53,17 @@ public class FatigueSystem : MonoBehaviour
 
     private void Start()
     {
+        // Cargar PlayerData si no está asignado
+        if (playerData == null)
+        {
+            playerData = Resources.Load<VoiceSystem.Core.Data.PlayerData>("Data/PlayerData");
+        }
+        
+        // Inicializar vidas
         if (playerLives != null) playerLives.ResetLives();
+        
+        // Sincronizar con PlayerData
+        SyncWithPlayerData();
 
         // Obtener GameTimer como singleton
         if (gameTimer == null)
@@ -65,7 +76,22 @@ public class FatigueSystem : MonoBehaviour
             gameTimer.OnTimerEnd += AlTerminarElTiempo;
         }
 
-        Debug.Log($"[FatigueSystem] Singleton inicializado - Vidas: {playerLives?.currentLives ?? 0}, Tiempo: {gameTimer?.GetTotalTime() ?? 0}s");
+        Debug.Log($"[FatigueSystem] Singleton inicializado - Vidas: {playerLives?.currentLives ?? 0}, Fatiga: {nivelFatigaActual}, Tiempo: {gameTimer?.GetTotalTime() ?? 0}s");
+    }
+    
+    /// <summary>
+    /// Sincroniza el estado actual con PlayerData
+    /// </summary>
+    public void SyncWithPlayerData()
+    {
+        if (playerData != null)
+        {
+            // Actualizar PlayerData con valores actuales
+            playerData.CurrentHealth = playerLives?.currentLives ?? 0;
+            playerData.CurrentFatigue = nivelFatigaActual;
+            
+            Debug.Log($"[FatigueSystem] Sincronizado con PlayerData: Salud={playerData.CurrentHealth}, Fatiga={playerData.CurrentFatigue}");
+        }
     }
 
     private void Update()
@@ -77,7 +103,7 @@ public class FatigueSystem : MonoBehaviour
             // Mostrar tiempo restante una vez por segundo
             if (Time.time - tiempoUltimoLog >= 1f)
             {
-                Debug.Log($"Tiempo restante: {Mathf.CeilToInt(gameTimer.GetRemainingTime())} segundos");
+                // Debug.Log($"Tiempo restante: {Mathf.CeilToInt(gameTimer.GetRemainingTime())} segundos"); // Comentado - spam
                 tiempoUltimoLog = Time.time;
             }
 
@@ -97,6 +123,7 @@ public class FatigueSystem : MonoBehaviour
                 {
                     nivelFatigaActual = 0;
                     playerLives.LoseLife();
+                    SyncWithPlayerData(); // Sincronizar cambios
 
                     if (playerLives.currentLives > 0)
                         Debug.Log($"Has acumulado demasiada fatiga. Pierdes una vida. Vidas restantes: {playerLives.currentLives}");
@@ -173,11 +200,13 @@ public class FatigueSystem : MonoBehaviour
         }
         
         nivelFatigaActual += amount;
+        SyncWithPlayerData(); // Sincronizar cambios
         
         if (nivelFatigaActual >= fatigaPorVida)
         {
             nivelFatigaActual = 0;
             playerLives.LoseLife();
+            SyncWithPlayerData(); // Sincronizar después de perder vida
             
             if (playerLives.currentLives > 0)
             {
@@ -200,11 +229,11 @@ public class FatigueSystem : MonoBehaviour
             return false;
         }
         
-        // Intentar sistema rico de RoomInventoryManager primero
-        var inventoryManager = VoiceSystem.GameIntegration.RoomInventoryManager.Instance;
-        if (inventoryManager != null)
-        {
-            var contextProvider = FindObjectOfType<VoiceSystem.GameIntegration.GameContextProvider>();
+            // Intentar sistema rico de RoomInventoryManager primero
+            var inventoryManager = VoiceSystem.GameIntegration.RoomInventoryManager.Instance;
+            if (inventoryManager != null)
+            {
+                var contextProvider = FindFirstObjectByType<VoiceSystem.GameIntegration.GameContextProvider>();
             if (contextProvider != null)
             {
                 var context = contextProvider.GetCurrentContext();
@@ -223,6 +252,7 @@ public class FatigueSystem : MonoBehaviour
                         );
                         
                         nivelFatigaActual = Mathf.Max(0, nivelFatigaActual - item.fatigueReduction);
+                        SyncWithPlayerData(); // Sincronizar después de consumir
                         
                         Debug.Log($"[FatigueSystem] Consumible usado: {item.itemName} (+{item.healthRestore} vida, -{item.fatigueReduction} fatiga)");
                         return true;

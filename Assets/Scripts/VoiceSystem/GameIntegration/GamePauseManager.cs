@@ -32,7 +32,7 @@ namespace VoiceSystem.GameIntegration
         public bool IsGamePaused { get; private set; }
 
         [Header("Configuration")]
-        [SerializeField] private bool enableDebugLogs = true;
+        [SerializeField] private bool enableDebugLogs = false; // Deshabilitado por defecto
 
         // Stored state for restoration
         private float previousTimeScale = 1f;

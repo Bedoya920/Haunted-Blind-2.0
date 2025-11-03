@@ -30,14 +30,31 @@ public class RoomGenerator3000 : MonoBehaviour
 
         Room room = new Room();
         room.id = Random.Range(10000, 99999); // Generar ID aquí, no en constructor
-        room.nombre = "Sala";
+        room.nombre = "Habitación"; // Nombre genérico - será reemplazado por MapeoGDD
         room.posicion = new Vector2Int(x, y);
         habitacionesRoom[x, y] = room;
 
+        // Guardar todas las habitaciones creadas para elegir desde cualquiera
+        List<Vector2Int> habitacionesCreadas = new List<Vector2Int>();
+        habitacionesCreadas.Add(new Vector2Int(x, y));
+        
         int intentos = 0;
+        int intentosSinExito = 0;
+        
         while (habiCreadas < numeroHabitaciones && intentos < 10000)
         {
             intentos++;
+            
+            // Si llevamos muchos intentos sin éxito, elegir una habitación aleatoria como base
+            if (intentosSinExito > 50 && habitacionesCreadas.Count > 0)
+            {
+                Vector2Int randomRoom = habitacionesCreadas[Random.Range(0, habitacionesCreadas.Count)];
+                x = randomRoom.x;
+                y = randomRoom.y;
+                intentosSinExito = 0;
+                Debug.Log($"[RoomGenerator] Cambiando a habitación aleatoria: ({x}, {y})");
+            }
+            
             int nx = x;
             int ny = y;
 
@@ -50,11 +67,14 @@ public class RoomGenerator3000 : MonoBehaviour
             {
                 habitaciones[nx, ny] = 2;
                 habiCreadas++;
+                intentosSinExito = 0; // Reset contador
 
                 Room _room = new Room(new Vector2Int(nx, ny));
                 _room.id = Random.Range(10000, 99999); // Generar ID aquí, no en constructor
-                _room.nombre = "Cuarto";
+                _room.nombre = "Habitación"; // Nombre genérico - será reemplazado por MapeoGDD
                 habitacionesRoom[nx, ny] = _room;
+                
+                habitacionesCreadas.Add(new Vector2Int(nx, ny)); // Añadir a lista
 
                 puertasBase.Add((new Vector2Int(x, y), new Vector2Int(nx, ny)));
 
@@ -65,6 +85,8 @@ public class RoomGenerator3000 : MonoBehaviour
             }
             else
             {
+                intentosSinExito++; // Incrementar si no creamos habitación
+                
                 if (x != nx || y != ny)
                     puertasBase.Add((new Vector2Int(x, y), new Vector2Int(nx, ny)));
             }
@@ -72,7 +94,11 @@ public class RoomGenerator3000 : MonoBehaviour
         LimpiarPuertasDuplicadas();
 
         if (intentos >= 10000)
-            Debug.LogWarning("Se alcanzó el límite de intentos sin completar la generación.");
+        {
+            Debug.LogWarning($"Se alcanzó el límite de intentos. Habitaciones creadas: {habiCreadas}/{numeroHabitaciones}");
+        }
+        
+        Debug.Log($"[RoomGenerator] Generación completada: {habiCreadas} habitaciones creadas en {intentos} intentos");
 
 
 
@@ -99,6 +125,8 @@ public class RoomGenerator3000 : MonoBehaviour
 
             casa.puertas.Add(door);
         }
+        
+        Debug.Log($"[RoomGenerator] ✅ Casa finalizada: {casa.habitaciones.Count} habitaciones, {casa.puertas.Count} puertas");
     }
 
     public void LimpiarPuertasDuplicadas()

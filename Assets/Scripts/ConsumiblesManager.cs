@@ -77,7 +77,7 @@ public class ConsumiblesManager : MonoBehaviour
     public void SyncWithRoomInventory()
     {
         var inventoryManager = VoiceSystem.GameIntegration.RoomInventoryManager.Instance;
-        var contextProvider = FindObjectOfType<VoiceSystem.GameIntegration.GameContextProvider>();
+            var contextProvider = FindFirstObjectByType<VoiceSystem.GameIntegration.GameContextProvider>();
         
         if (inventoryManager != null && contextProvider != null && consumibleData != null)
         {

@@ -1,0 +1,158 @@
+{
+    "mainEvents": [],
+    "randomEvents": [
+        {
+            "id": 200,
+            "eventName": "Confirmación - Comer Consumible",
+            "type": 1,
+            "audioTxt": "Comiste {item_name}. Te sientes un poco mejor.",
+            "duration": 3.0,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 201,
+            "eventName": "Confirmación - Tomar Item",
+            "type": 1,
+            "audioTxt": "Tomaste {item_name}. Lo guardas en tu inventario.",
+            "duration": 2.5,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 202,
+            "eventName": "Confirmación - Buscar Exitoso",
+            "type": 1,
+            "audioTxt": "Buscaste cuidadosamente. Encontraste {items_found}.",
+            "duration": 3.0,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 203,
+            "eventName": "Confirmación - Buscar Sin Resultados",
+            "type": 1,
+            "audioTxt": "Buscaste cuidadosamente pero no encontraste nada nuevo.",
+            "duration": 2.5,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 204,
+            "eventName": "Confirmación - Inspeccionar",
+            "type": 1,
+            "audioTxt": "Inspeccionas {item_name}. {item_description}",
+            "duration": 3.5,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 205,
+            "eventName": "Confirmación - Usar Puerta",
+            "type": 1,
+            "audioTxt": "Atravesaste la puerta hacia {direction}.",
+            "duration": 2.0,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 206,
+            "eventName": "Confirmación - Puerta Bloqueada",
+            "type": 1,
+            "audioTxt": "La puerta está bloqueada. {reason}",
+            "duration": 3.0,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 207,
+            "eventName": "Confirmación - Usar Llave",
+            "type": 1,
+            "audioTxt": "Usaste {key_name} y abriste la puerta.",
+            "duration": 2.5,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 208,
+            "eventName": "Confirmación - Item No Disponible",
+            "type": 1,
+            "audioTxt": "No ves {item_name} aquí.",
+            "duration": 2.0,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 209,
+            "eventName": "Confirmación - Sin Consumibles",
+            "type": 1,
+            "audioTxt": "No tienes comida para consumir.",
+            "duration": 2.0,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 210,
+            "eventName": "Confirmación - Vida Completa",
+            "type": 1,
+            "audioTxt": "Ya tienes la vida completa. No necesitas comer ahora.",
+            "duration": 2.5,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 211,
+            "eventName": "Confirmación - Tomar Llave",
+            "type": 1,
+            "audioTxt": "Tomaste {key_name}. Podrías usarla para abrir puertas bloqueadas.",
+            "duration": 3.0,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 212,
+            "eventName": "Confirmación - Leer Diario",
+            "type": 1,
+            "audioTxt": "Lees el diario. {diary_content}",
+            "duration": 4.0,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 213,
+            "eventName": "Confirmación - Fatiga Aumentada",
+            "type": 1,
+            "audioTxt": "Te sientes más cansado. Tu nivel de fatiga ha aumentado.",
+            "duration": 2.5,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        },
+        {
+            "id": 214,
+            "eventName": "Confirmación - Vida Perdida",
+            "type": 1,
+            "audioTxt": "Has perdido una vida. Te quedan {remaining_lives} vidas.",
+            "duration": 3.0,
+            "roomId": "",
+            "narrateWithVoice": true,
+            "isUnique": false
+        }
+    ],
+    "randomEventAmount": 15
+}
+
+

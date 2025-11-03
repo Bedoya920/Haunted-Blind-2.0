@@ -29,6 +29,11 @@ namespace VoiceSystem.Synthesis
         [Tooltip("Reference to GamePauseManager (auto-assigned if null)")]
         [SerializeField] private GamePauseManager gamePauseManager;
         
+        [Header("Speech Recognition Pause")]
+        [SerializeField] private bool pauseRecognitionDuringSpeech = true;
+        [Tooltip("Reference to WindowsSpeechRecognizer (auto-assigned if null)")]
+        [SerializeField] private Recognition.WindowsSpeechRecognizer speechRecognizer;
+        
         // P/Invoke declarations for Windows SAPI
         [DllImport("winmm.dll", SetLastError = true)]
         private static extern bool PlaySound(string pszSound, IntPtr hmod, uint fdwSound);
@@ -45,6 +50,12 @@ namespace VoiceSystem.Synthesis
             if (pauseGameDuringSpeech && gamePauseManager == null)
             {
                 gamePauseManager = GamePauseManager.Instance;
+            }
+            
+            // Get or create WindowsSpeechRecognizer if needed
+            if (pauseRecognitionDuringSpeech && speechRecognizer == null)
+            {
+                speechRecognizer = FindFirstObjectByType<Recognition.WindowsSpeechRecognizer>();
             }
         }
         
@@ -68,7 +79,24 @@ namespace VoiceSystem.Synthesis
                 return;
             }
             
-            Debug.Log($"[WindowsTTS] Speaking: {text}");
+            // Si ya está hablando, añadir a la cola
+            if (IsSpeaking)
+            {
+                var queue = NarrationQueue.Instance;
+                if (queue != null)
+                {
+                    Debug.Log($"[WindowsTTS] Ocupado → Añadiendo a cola: {text.Substring(0, Mathf.Min(50, text.Length))}...");
+                    queue.Enqueue(text, priority);
+                    return;
+                }
+                else
+                {
+                    Debug.LogWarning($"[WindowsTTS] Ya está hablando y no hay cola, ignorando: {text}");
+                    return;
+                }
+            }
+            
+            // Debug.Log($"[WindowsTTS] Speaking: {text}"); // Comentado - demasiado verbose
             
             IsSpeaking = true;
             
@@ -76,6 +104,12 @@ namespace VoiceSystem.Synthesis
             if (pauseGameDuringSpeech && gamePauseManager != null)
             {
                 gamePauseManager.PauseGame();
+            }
+            
+            // NUEVO: Pausar reconocimiento de voz durante la narración
+            if (pauseRecognitionDuringSpeech && speechRecognizer != null)
+            {
+                speechRecognizer.PauseRecognition();
             }
             
             OnSpeechStarted?.Invoke(text);
@@ -126,8 +160,14 @@ $synth.Dispose();
                             gamePauseManager.ResumeGame();
                         }
                         
+                        // NUEVO: Reanudar reconocimiento de voz
+                        if (pauseRecognitionDuringSpeech && speechRecognizer != null)
+                        {
+                            speechRecognizer.ResumeRecognition();
+                        }
+                        
                         OnSpeechCompleted?.Invoke(text);
-                        Debug.Log($"[WindowsTTS] Speech completed: {text}");
+                        // Debug.Log($"[WindowsTTS] Speech completed: {text}"); // Comentado - spam
                     });
                 });
             }
@@ -141,6 +181,12 @@ $synth.Dispose();
                 if (pauseGameDuringSpeech && gamePauseManager != null && gamePauseManager.IsGamePaused)
                 {
                     gamePauseManager.ResumeGame();
+                }
+                
+                // NUEVO: Reanudar reconocimiento en caso de error
+                if (pauseRecognitionDuringSpeech && speechRecognizer != null)
+                {
+                    speechRecognizer.ResumeRecognition();
                 }
             }
         }
@@ -161,6 +207,12 @@ $synth.Dispose();
                 if (pauseGameDuringSpeech && gamePauseManager != null && gamePauseManager.IsGamePaused)
                 {
                     gamePauseManager.ResumeGame();
+                }
+                
+                // NUEVO: Reanudar reconocimiento al detener
+                if (pauseRecognitionDuringSpeech && speechRecognizer != null)
+                {
+                    speechRecognizer.ResumeRecognition();
                 }
                 
                 Debug.Log("[WindowsTTS] Speech stopped");

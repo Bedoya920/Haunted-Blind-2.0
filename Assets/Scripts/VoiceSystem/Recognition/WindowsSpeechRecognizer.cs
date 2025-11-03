@@ -24,12 +24,27 @@ namespace VoiceSystem.Recognition
         // State
         public bool IsListening { get; private set; }
         public bool IsInitialized { get; private set; }
+        private bool isPaused = false; // NUEVO: Para pausar mientras habla el narrador
         
         // Windows Speech Recognition
         private DictationRecognizer dictationRecognizer;
         
+        // Debouncing para prevenir duplicados
+        private string lastRecognizedPhrase = "";
+        private float lastRecognitionTime = 0f;
+        private const float DEBOUNCE_TIME = 0.5f; // Medio segundo
+        
         private void Awake()
         {
+            // Check for duplicates
+            var existing = FindObjectsByType<WindowsSpeechRecognizer>(FindObjectsSortMode.None);
+            if (existing.Length > 1)
+            {
+                Debug.LogWarning($"[WindowsSpeech] {existing.Length} instancias detectadas - Destruyendo duplicado");
+                Destroy(gameObject);
+                return;
+            }
+            
             Initialize();
         }
         
@@ -161,15 +176,53 @@ namespace VoiceSystem.Recognition
             }
         }
         
+        /// <summary>
+        /// Pausar reconocimiento de voz (durante narración)
+        /// </summary>
+        public void PauseRecognition()
+        {
+            isPaused = true;
+            Debug.Log("[WindowsSpeech] 🔇 Reconocimiento PAUSADO (narrador hablando)");
+        }
+        
+        /// <summary>
+        /// Reanudar reconocimiento de voz (tras narración)
+        /// </summary>
+        public void ResumeRecognition()
+        {
+            isPaused = false;
+            Debug.Log("[WindowsSpeech] 🎤 Reconocimiento REANUDADO");
+        }
+        
         private void OnDictationResult(string text, ConfidenceLevel confidence)
         {
-            Debug.Log($"[WindowsSpeech] REAL recognition result: '{text}' (confidence: {confidence})");
+            // NUEVO: Ignorar comandos si el reconocimiento está pausado
+            if (isPaused)
+            {
+                Debug.Log($"[WindowsSpeech] 🔇 Comando ignorado (narrador hablando): '{text}'");
+                return;
+            }
+            
+            float currentTime = Time.realtimeSinceStartup;
+            
+            // Debounce - ignorar si es la misma frase dentro de 0.5 segundos
+            if (text == lastRecognizedPhrase && 
+                (currentTime - lastRecognitionTime) < DEBOUNCE_TIME)
+            {
+                Debug.Log($"[WindowsSpeech] ⚠️ Ignorando frase duplicada: '{text}'");
+                return;
+            }
+            
+            lastRecognizedPhrase = text;
+            lastRecognitionTime = currentTime;
+            
+            Debug.Log($"[WindowsSpeech] 🎤 '{text}'"); // Simplificado
             OnSpeechRecognized?.Invoke(text);
         }
         
         private void OnDictationHypothesis(string text)
         {
-            Debug.Log($"[WindowsSpeech] Recognition hypothesis: '{text}'");
+            // Debug.Log($"[WindowsSpeech] Recognition hypothesis: '{text}'"); // Comentado - hipótesis no son finales
         }
         
         private void OnDictationComplete(DictationCompletionCause cause)
