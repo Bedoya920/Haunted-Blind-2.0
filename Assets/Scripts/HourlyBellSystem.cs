@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using VoiceSystem.Core;
 
 /// <summary>
@@ -12,6 +13,7 @@ public class HourlyBellSystem : MonoBehaviour
     [Header("Referencias")]
     private GameTimer gameTimer;
     private VoiceSystemManager voiceSystem;
+    private Coroutine currentBellSequence;
     
     [Header("Debug")]
     [SerializeField] private bool enableDebugLogs = true;
@@ -79,6 +81,49 @@ public class HourlyBellSystem : MonoBehaviour
     {
         if (voiceSystem?.textToSpeech == null) return;
         
+        // Cancelar secuencia anterior si existe
+        if (currentBellSequence != null)
+        {
+            StopCoroutine(currentBellSequence);
+            currentBellSequence = null;
+        }
+        
+        // Reproducir sonido de campanadas y luego narrar
+        var soundManager = Audio.SoundManager.Instance;
+        if (soundManager != null)
+        {
+            currentBellSequence = StartCoroutine(PlayBellSequenceAndNarrate(count, hour));
+        }
+        else
+        {
+            // Fallback: solo narrar sin sonido
+            NarrateBellMessage(count, hour);
+        }
+    }
+    
+    private IEnumerator PlayBellSequenceAndNarrate(int count, int hour)
+    {
+        var soundManager = Audio.SoundManager.Instance;
+        
+        // Reproducir campanadas
+        for (int i = 0; i < count; i++)
+        {
+            soundManager.PlayOneShot("bell_chime", 0.8f);
+            yield return new WaitForSeconds(1.5f);
+        }
+        
+        // Pausa antes de narrar
+        yield return new WaitForSeconds(0.5f);
+        
+        // Narrar
+        NarrateBellMessage(count, hour);
+        
+        // Limpiar referencia
+        currentBellSequence = null;
+    }
+    
+    private void NarrateBellMessage(int count, int hour)
+    {
         string hourStr = GetHourString(hour);
         string bellNarration = "";
         

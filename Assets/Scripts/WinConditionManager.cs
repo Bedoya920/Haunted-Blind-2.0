@@ -51,16 +51,16 @@ public class WinConditionManager : MonoBehaviour
         if (victoryAchieved) return false;
         if (playerState == null || roomBridge == null) return false;
         
-        // Verificar que tenga la flor viva
-        bool hasFlower = playerState.HasItem("lotus_flower_alive");
+        // Verificar que DIO la flor al retrato (flag más confiable que item)
+        bool gaveFlower = playerState.HasSeenEvent("gave_flower_to_portrait");
         
         // Verificar que esté en la Sala Principal
         var currentRoom = roomBridge.GetCurrentRoom();
         bool inLivingRoom = currentRoom != null && currentRoom.roomId == livingRoomId;
         
-        LogDebug($"[WinCondition] CanWin check - Flor: {hasFlower}, En Sala: {inLivingRoom}");
+        LogDebug($"[WinCondition] CanWin check - Dio flor: {gaveFlower}, En Sala: {inLivingRoom}");
         
-        return hasFlower && inLivingRoom;
+        return gaveFlower && inLivingRoom;
     }
     
     /// <summary>
@@ -77,9 +77,9 @@ public class WinConditionManager : MonoBehaviour
             {
                 string feedback = "";
                 
-                if (!playerState.HasItem("lotus_flower_alive"))
+                if (!playerState.HasSeenEvent("gave_flower_to_portrait"))
                 {
-                    feedback = "No tienes la flor de loto viva. Debes encontrarla primero.";
+                    feedback = "Primero debes dar la flor de loto al retrato familiar en la Sala. Di Dar.";
                 }
                 else
                 {

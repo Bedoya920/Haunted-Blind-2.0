@@ -107,6 +107,19 @@ public class BasementDoorDialogue : MonoBehaviour
             yield break;
         }
         
+        // PAUSAR el GameTimer durante el diálogo para evitar que las campanadas interrumpan
+        var gameTimer = GameTimer.Instance;
+        bool timerWasRunning = false;
+        if (gameTimer != null)
+        {
+            timerWasRunning = gameTimer.IsRunning(); // FIX: IsRunning es un método, no propiedad
+            if (timerWasRunning)
+            {
+                gameTimer.PauseTimer();
+                LogDebug("[BasementDoor] ⏸️ Timer pausado durante el diálogo");
+            }
+        }
+        
         // Narración inicial
         string intro = "El aire se espesa apenas te acercas a la puerta. La madera cruje, no por el peso del tiempo, sino porque respira. " +
                       "Desde el otro lado, un murmullo atraviesa las rendijas, mezclado con el eco del tic tac que parece provenir de dentro de las paredes. " +
@@ -162,11 +175,13 @@ public class BasementDoorDialogue : MonoBehaviour
         
         LogDebug("[BasementDoor] ✅ Jugador guardó silencio - RESPUESTA CORRECTA");
         
-        // Activar la flor de loto viva
+        // Activar flags del evento del niño
         if (playerState != null)
         {
             playerState.SetEventFlag("lotus_flower_activated");
+            playerState.SetEventFlag("child_dialogue_complete"); // CRÍTICO: Para activar eventos post-niño
             LogDebug("[BasementDoor] 🌸 Flor de loto activada");
+            LogDebug("[BasementDoor] ✅ Flag 'child_dialogue_complete' marcado");
         }
         
         // Narrar confirmación
@@ -176,6 +191,14 @@ public class BasementDoorDialogue : MonoBehaviour
                                 "Algo ha cambiado en la casa. El aire huele ahora a flores frescas, a tierra húmeda y vida nueva.";
             
             voiceSystem.textToSpeech.Speak(confirmation, VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+        }
+        
+        // RESUMIR el GameTimer después del diálogo
+        var gameTimer = GameTimer.Instance;
+        if (gameTimer != null && !gameTimer.IsRunning()) // FIX: IsRunning es un método
+        {
+            gameTimer.ResumeTimer();
+            LogDebug("[BasementDoor] ▶️ Timer reanudado después del diálogo");
         }
     }
     
@@ -206,7 +229,13 @@ public class BasementDoorDialogue : MonoBehaviour
     
     private IEnumerator TriggerBadEnding()
     {
-        yield return new WaitForSeconds(18f); // Esperar a que termine la narración
+        yield return new WaitForSeconds(10f); // Esperar a que termine la narración principal
+        
+        // Narrar mensaje de muerte
+        if (voiceSystem?.textToSpeech != null)
+        {
+            voiceSystem.textToSpeech.Speak("Has muerto. El juego se reiniciará.", VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+        }
         
         // Matar al jugador
         var fatigueSystem = FatigueSystem.Instance;
@@ -219,6 +248,12 @@ public class BasementDoorDialogue : MonoBehaviour
         {
             Debug.LogError("[BasementDoor] FatigueSystem no encontrado");
         }
+        
+        // Reiniciar la escena después de 3 segundos
+        yield return new WaitForSeconds(3f);
+        LogDebug("[BasementDoor] 🔄 Reiniciando juego...");
+        UnityEngine.SceneManagement.SceneManager.LoadScene(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
     
     private void LogDebug(string message)

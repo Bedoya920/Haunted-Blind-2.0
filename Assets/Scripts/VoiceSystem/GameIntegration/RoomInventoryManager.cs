@@ -223,6 +223,16 @@ namespace VoiceSystem.GameIntegration
                 return false;
             }
             
+            // NUEVO: Verificar si es un objeto solo legible (tipo Readable o Decorative)
+            if (item.itemType == ItemType.Readable || item.itemType == ItemType.Decorative)
+            {
+                failReason = !string.IsNullOrEmpty(item.failMessage)
+                    ? item.failMessage
+                    : "No puedes tomar este objeto. Intenta leerlo o inspeccionarlo.";
+                LogDebug($"[RoomInventory] Item {itemId} es de tipo Readable/Decorative - No se puede tomar");
+                return false;
+            }
+            
             // Obtener PlayerStateManager una sola vez
             var playerState = PlayerStateManager.Instance;
             
@@ -608,16 +618,24 @@ namespace VoiceSystem.GameIntegration
                 Debug.LogWarning("[RoomInventory] ⚠️ VoiceSystem TTS no disponible para narrar evento del oso");
             }
             
-            // Activar sistema de screamers usando SendMessage para evitar dependencia de tipo
-            var screamerSystemObj = GameObject.Find("GameManager");
-            if (screamerSystemObj != null)
+            // Activar sistema de screamers usando Singleton (más confiable que SendMessage)
+            var screamerSystem = ScreamerSystem.Instance;
+            if (screamerSystem != null)
             {
-                screamerSystemObj.SendMessage("ActivateScreamers", SendMessageOptions.DontRequireReceiver);
-                Debug.Log("[RoomInventory] ✅ Mensaje ActivateScreamers enviado a GameManager");
+                screamerSystem.ActivateScreamers();
+                Debug.Log("[RoomInventory] ✅ ScreamerSystem activado correctamente");
             }
             else
             {
-                Debug.LogWarning("[RoomInventory] GameManager no encontrado, pero el evento del oso se disparó correctamente");
+                Debug.LogWarning("[RoomInventory] ⚠️ ScreamerSystem.Instance no encontrado - ¿GameInitializer lo creó?");
+            }
+            
+            // Cambiar música inmediatamente
+            var ambientController = Audio.AmbientMusicController.Instance;
+            if (ambientController != null)
+            {
+                ambientController.CheckForChildEvent();
+                Debug.Log("[RoomInventory] ✅ Música cambiada a post-2 AM inmediatamente");
             }
         }
         

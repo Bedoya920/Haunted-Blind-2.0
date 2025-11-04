@@ -183,6 +183,9 @@ GameObject:
   - component: {fileID: 176073509}
   - component: {fileID: 176073508}
   - component: {fileID: 176073513}
+  - component: {fileID: 176073516}
+  - component: {fileID: 176073515}
+  - component: {fileID: 176073514}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -589,6 +592,54 @@ MonoBehaviour:
   currentRoomColor: {r: 0.4, g: 0.75, b: 0.4, a: 1}
   doorColor: {r: 0, g: 1, b: 1, a: 1}
   playerTextColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+--- !u!114 &176073514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 176073502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: affab02cfec96144f8516909a6f77516, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  livingRoomId: room_2
+  victoryAchieved: 0
+  enableDebugLogs: 1
+--- !u!114 &176073515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 176073502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d57eae041619d424583c94d228d7b813, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  basementRoomId: room_8
+  dialogueTimeout: 10
+  dialogueTriggered: 0
+  waitingForResponse: 0
+  enableDebugLogs: 1
+--- !u!114 &176073516
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 176073502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c86c780aed470624a9e97b3cbcb443f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  screamersActive: 0
+  screamerChance: 0.3
+  screamerCooldown: 30
+  enableDebugLogs: 1
 --- !u!1 &577722744
 GameObject:
   m_ObjectHideFlags: 0

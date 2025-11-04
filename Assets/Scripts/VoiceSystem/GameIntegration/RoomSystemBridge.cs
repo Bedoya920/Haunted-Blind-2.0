@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using VoiceSystem.Core.Data;
@@ -182,10 +183,12 @@ namespace VoiceSystem.GameIntegration
             currentPlayerPosition = generator.casa.habitacionInicial;
             
             visitedRooms.Clear();
-            visitedRooms.Add(currentPlayerPosition);
+            // CRÍTICO: NO marcar la habitación inicial como visitada
+            // El sistema de eventos debe manejar la primera entrada a cada habitación
             ClearCache();
             
-            Debug.Log($"[RoomBridge] ✅ RoomGenerator asignado. Habitación inicial: {currentPlayerPosition}, Total habitaciones: {generator.casa.habitaciones.Count}, Total puertas: {generator.casa.puertas.Count}");
+            Debug.Log($"[RoomBridge] ✅ RoomGenerator asignado. Habitación inicial: {currentPlayerPosition}");
+            Debug.Log($"[RoomBridge] 🆕 visitedRooms.Count: {visitedRooms.Count} (debe ser 0 al inicio)");
             
             // NUEVO: Verificar puertas de la habitación inicial
             var doorsInStart = GetDoorsForRoom(currentPlayerPosition);
@@ -669,7 +672,40 @@ namespace VoiceSystem.GameIntegration
                 playerState.UpdatePosition(newPosition, newRoomData);
             }
             
+            // Reproducir sonidos de puerta y pasos
+            PlayDoorAndFootstepSounds();
+            
             return true;
+        }
+        
+        /// <summary>
+        /// Reproduce sonidos de puerta y pasos al atravesar una puerta
+        /// </summary>
+        private void PlayDoorAndFootstepSounds()
+        {
+            var soundManager = Audio.SoundManager.Instance;
+            if (soundManager != null)
+            {
+                // Reproducir sonido de puerta
+                soundManager.PlayOneShot("door_open", 0.7f);
+                
+                // Reproducir pasos con un pequeño delay
+                StartCoroutine(PlayFootstepsDelayed(0.4f));
+            }
+        }
+        
+        /// <summary>
+        /// Reproduce pasos con delay
+        /// </summary>
+        private System.Collections.IEnumerator PlayFootstepsDelayed(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            
+            var soundManager = Audio.SoundManager.Instance;
+            if (soundManager != null)
+            {
+                soundManager.PlayOneShot("footsteps", 0.5f);
+            }
         }
         
         public void UpdateRoomState(RoomData room)

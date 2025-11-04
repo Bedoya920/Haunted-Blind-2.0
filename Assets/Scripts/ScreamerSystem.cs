@@ -120,11 +120,28 @@ public class ScreamerSystem : MonoBehaviour
         
         LogDebug($"[ScreamerSystem] 👻 SCREAMER disparado en {room.roomName}!");
         
-        // Narrar screamer con prioridad URGENTE
-        var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
-        if (voiceSystem?.textToSpeech != null)
+        // Reproducir sonido de screamer con fade
+        var soundManager = Audio.SoundManager.Instance;
+        if (soundManager != null)
         {
-            voiceSystem.textToSpeech.Speak(screamerNarration, VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+            string screamerId = GetScreamerSoundId(room.roomId);
+            soundManager.PlayScreamer(screamerId, () => {
+                // Después del sonido, narrar
+                var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                if (voiceSystem?.textToSpeech != null)
+                {
+                    voiceSystem.textToSpeech.Speak(screamerNarration, VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+                }
+            });
+        }
+        else
+        {
+            // Fallback: solo narrar sin sonido
+            var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+            if (voiceSystem?.textToSpeech != null)
+            {
+                voiceSystem.textToSpeech.Speak(screamerNarration, VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+            }
         }
         
         // Reducir vida del jugador
@@ -133,6 +150,23 @@ public class ScreamerSystem : MonoBehaviour
         {
             fatigueSystem.PlayerLives.currentLives = Mathf.Max(0, fatigueSystem.PlayerLives.currentLives - 1);
             LogDebug($"[ScreamerSystem] ❤️ Jugador perdió 1 vida por screamer (Vidas restantes: {fatigueSystem.PlayerLives.currentLives})");
+        }
+    }
+    
+    /// <summary>
+    /// Mapea roomId a soundId de screamer
+    /// </summary>
+    private string GetScreamerSoundId(string roomId)
+    {
+        switch (roomId)
+        {
+            case "room_5": return "screamer_kitchen";     // Cocina
+            case "room_6": return "screamer_bathroom";    // Baño
+            case "room_7": return "screamer_bedroom";     // Hab. Principal
+            case "room_4": return "screamer_dining";      // Comedor
+            case "room_3": return "screamer_library";     // Biblioteca
+            case "room_9": return "screamer_bedroom";     // Hab. Niños (reusa bedroom)
+            default: return "screamer_default";
         }
     }
     

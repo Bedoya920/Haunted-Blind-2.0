@@ -292,6 +292,18 @@ namespace VoiceSystem.GameIntegration
                 case "reloj":
                     CheckCurrentTime();
                     break;
+                case "volumen_subir":
+                    AdjustVolume(0.1f);
+                    break;
+                case "volumen_bajar":
+                    AdjustVolume(-0.1f);
+                    break;
+                case "volumen_silenciar":
+                    MuteAudio(true);
+                    break;
+                case "volumen_activar":
+                    MuteAudio(false);
+                    break;
                 case "buscar":
                     {
                         var validator = CommandValidator.Instance;
@@ -392,11 +404,8 @@ namespace VoiceSystem.GameIntegration
                 }
                 
                 // Trigger story event de entrada a la habitación
-                var storyTrigger = FindFirstObjectByType<StoryEventTrigger>();
-                if (storyTrigger != null && newRoom != null)
-                {
-                    storyTrigger.TriggerRoomEntry(newRoom.roomId);
-                }
+                // REMOVIDO: StoryEventTrigger ya se dispara automáticamente vía evento OnRoomChanged
+                // No es necesario llamarlo manualmente aquí (causaba eventos duplicados)
                 
                 Debug.Log($"[GameContextProvider] Movimiento exitoso {direction} → {newRoom?.roomName}");
             }
@@ -443,12 +452,36 @@ namespace VoiceSystem.GameIntegration
                     
                     if (consumable != null && consumable.IsConsumable())
                     {
-                        // Consumir
-                        currentContext.inventory.Remove(itemId);
-                        currentContext.RestoreHealth(consumable.healthRestore);
-                        currentContext.fatigue = Mathf.Max(0, currentContext.fatigue - consumable.fatigueReduction);
+                        Debug.Log($"[GameContext] Consumiendo: {consumable.itemName} (Health +{consumable.healthRestore}, Fatigue -{consumable.fatigueReduction})");
                         
-                        currentContext.AddEvent($"Comiste {consumable.itemName}");
+                        // Remover del inventario
+                        currentContext.inventory.Remove(itemId);
+                        
+                        // Aplicar DIRECTAMENTE a FatigueSystem (authoritative)
+                        if (fatigueSys != null && fatigueSys.PlayerLives != null)
+                        {
+                            // Restaurar salud
+                            if (consumable.healthRestore > 0)
+                            {
+                                fatigueSys.PlayerLives.currentLives = Mathf.Min(
+                                    fatigueSys.PlayerLives.currentLives + consumable.healthRestore,
+                                    fatigueSys.PlayerLives.totalLives
+                                );
+                                Debug.Log($"[GameContext] Salud actualizada: {fatigueSys.PlayerLives.currentLives}/{fatigueSys.PlayerLives.totalLives}");
+                            }
+                            
+                            // Reducir fatiga DIRECTAMENTE
+                            if (consumable.fatigueReduction > 0)
+                            {
+                                fatigueSys.ReduceFatigue(consumable.fatigueReduction);
+                                Debug.Log($"[GameContext] Fatiga reducida en {consumable.fatigueReduction} puntos");
+                            }
+                        }
+                        
+                        // Sincronizar de vuelta al contexto
+                        SyncWithFatigueSystem();
+                        
+                        currentContext.AddEvent($"Consumiste {consumable.itemName}");
                         
                         // Confirmar con voz
                         if (confirmationManager != null)
@@ -456,13 +489,7 @@ namespace VoiceSystem.GameIntegration
                             confirmationManager.ConfirmEat(consumable.itemName, consumable.healthRestore, consumable.fatigueReduction);
                         }
                         
-                        // Sincronizar con FatigueSystem si existe
-                        if (fatigueSys != null)
-                        {
-                            SyncWithFatigueSystem();
-                        }
-                        
-                        Debug.Log($"[GameContext] Consumible usado: {consumable.itemName} (+{consumable.healthRestore} vida, -{consumable.fatigueReduction} fatiga)");
+                        Debug.Log($"[GameContext] ✅ Consumible aplicado: {consumable.itemName} | Salud: {currentContext.health}, Fatiga: {currentContext.fatigue}");
                         return;
                     }
                 }
@@ -492,16 +519,34 @@ namespace VoiceSystem.GameIntegration
         
         private void InspectLocation()
         {
-            // NUEVO: Usar RoomInventoryManager para obtener objetos reales
+            // DISPARAR eventos de "inspect" en StoryEventTrigger
+            // Los eventos "inspect" tienen sus propias narraciones detalladas
+            var storyTrigger = FindFirstObjectByType<StoryEventTrigger>();
+            if (storyTrigger != null)
+            {
+                string currentRoomId = currentContext.currentRoom?.roomId ?? "";
+                if (!string.IsNullOrEmpty(currentRoomId))
+                {
+                    storyTrigger.TriggerInspect(currentRoomId);
+                    Debug.Log($"[GameContext] 🔍 Evento 'inspect' disparado en {currentRoomId}");
+                    
+                    // NO narrar lista genérica después de evento "inspect"
+                    // El evento ya proporciona una narración detallada y específica
+                    currentContext.AddEvent($"Inspeccionas {currentContext.currentLocation}.");
+                    return;
+                }
+            }
+            
+            // FALLBACK: Si NO hay evento "inspect", narrar lista genérica de objetos
             var inventoryManager = RoomInventoryManager.Instance;
-            string currentRoomId = currentContext.currentRoom?.roomId ?? "";
+            string roomId = currentContext.currentRoom?.roomId ?? "";
             
             string inspection = $"Inspeccionas {currentContext.currentLocation}. ";
             
             // Obtener objetos visibles del inventario
-            if (inventoryManager != null && !string.IsNullOrEmpty(currentRoomId))
+            if (inventoryManager != null && !string.IsNullOrEmpty(roomId))
             {
-                var inventory = inventoryManager.GetRoomInventory(currentRoomId);
+                var inventory = inventoryManager.GetRoomInventory(roomId);
                 var visibleItems = inventory.GetVisibleItems();
                 
                 if (visibleItems.Count > 0)
@@ -509,12 +554,12 @@ namespace VoiceSystem.GameIntegration
                     var itemNames = visibleItems.ConvertAll(i => i.itemName);
                     inspection += $"Ves: {string.Join(", ", itemNames)}.";
                     
-                    // Narrar con voz (prioridad URGENTE para que no sea interrumpido)
+                    // Narrar con voz (solo si NO hubo evento "inspect")
                     var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
                     if (voiceSystem?.textToSpeech != null)
                     {
-                        Debug.Log($"[GameContext] 🔍 Narrando inspección: {inspection}");
-                        voiceSystem.textToSpeech.Speak(inspection, VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+                        Debug.Log($"[GameContext] 🔍 Narrando lista de objetos: {inspection}");
+                        voiceSystem.textToSpeech.Speak(inspection, VoiceSystem.Core.Interfaces.TTSPriority.Normal);
                     }
                 }
                 else if (currentContext.nearbyObjects.Count > 0)
@@ -687,13 +732,12 @@ namespace VoiceSystem.GameIntegration
                 {
                     Debug.Log($"[GameContext] 📖 Narrando lectura de {item.itemName} ({description.Length} caracteres)");
                     
-                    // Si la narración es muy larga (>500 caracteres), usar prioridad Normal
-                    // Si es corta, usar Urgent para que no se pierda
-                    var priority = description.Length > 500 
-                        ? VoiceSystem.Core.Interfaces.TTSPriority.Normal 
-                        : VoiceSystem.Core.Interfaces.TTSPriority.Urgent;
+                    // Primero anunciar el título del libro con prioridad Urgent
+                    string announcement = $"Lees el {item.itemName}.";
+                    voiceSystem.textToSpeech.Speak(announcement, VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
                     
-                    voiceSystem.textToSpeech.Speak(description, priority);
+                    // Luego narrar el contenido con prioridad Normal (para no bloquear)
+                    voiceSystem.textToSpeech.Speak(description, VoiceSystem.Core.Interfaces.TTSPriority.Normal);
                 }
                 else
                 {
@@ -723,10 +767,12 @@ namespace VoiceSystem.GameIntegration
                     
                     // Narrar
                     var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
-                    voiceSystem?.textToSpeech?.Speak("Extiendes la flor hacia el retrato. Ahora di Renacer para completar el ritual.", VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+                    voiceSystem?.textToSpeech?.Speak("Extiendes la flor hacia el retrato. Los pétalos tocan la pintura y comienzan a brillar. Ahora di Renacer para completar el ritual.", VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
                     
-                    // Marcar que dio la flor
+                    // Marcar que dio la flor (pero NO remover del inventario - se necesita para la victoria)
                     playerState.SetEventFlag("gave_flower_to_portrait");
+                    
+                    Debug.Log("[GameContext] ✅ Flor dada al retrato - Flag 'gave_flower_to_portrait' activado");
                     
                     return;
                 }
@@ -1020,6 +1066,49 @@ namespace VoiceSystem.GameIntegration
             currentContext.health = Mathf.Max(0, currentContext.health - 1);
             Debug.Log($"[GameContext] Health reduced to {currentContext.health}");
         }
+        
+        #region Audio Control Methods
+        
+        private void AdjustVolume(float delta)
+        {
+            var soundManager = Audio.SoundManager.Instance;
+            if (soundManager != null)
+            {
+                soundManager.AdjustMasterVolume(delta);
+                float currentVolume = soundManager.GetMasterVolume();
+                
+                var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                int displayVolume = Mathf.FloorToInt(currentVolume * 100);
+                voiceSystem?.textToSpeech?.Speak($"Volumen al {displayVolume} por ciento", VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+                
+                Debug.Log($"[GameContext] Volumen: {currentVolume:F2}");
+            }
+            else
+            {
+                Debug.LogWarning("[GameContext] SoundManager no disponible para ajustar volumen");
+            }
+        }
+        
+        private void MuteAudio(bool mute)
+        {
+            var soundManager = Audio.SoundManager.Instance;
+            if (soundManager != null)
+            {
+                soundManager.SetMute(mute);
+                
+                var voiceSystem = VoiceSystem.Core.VoiceSystemManager.Instance;
+                string message = mute ? "Audio silenciado" : "Audio activado";
+                voiceSystem?.textToSpeech?.Speak(message, VoiceSystem.Core.Interfaces.TTSPriority.Urgent);
+                
+                Debug.Log($"[GameContext] Audio: {(mute ? "Silenciado" : "Activado")}");
+            }
+            else
+            {
+                Debug.LogWarning("[GameContext] SoundManager no disponible para silenciar audio");
+            }
+        }
+        
+        #endregion
         
         private void OnDestroy()
         {

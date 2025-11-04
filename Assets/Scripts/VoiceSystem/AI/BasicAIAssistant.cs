@@ -122,12 +122,23 @@ namespace VoiceSystem.AI
                 {"tomar", "Intentas tomar algo. [CMD:tomar]"},
                 {"usar", "Usas un objeto. [CMD:usar]"},
                 {"comer", "Comes algo para recuperar energía. [CMD:comer]"},
+                {"beber", "Bebes algo para recuperar energía. [CMD:comer]"}, // Alias de comer
                 {"dar", "Das algo. [CMD:dar]"},
                 
-                // Time commands
-                {"hora", "Revisas la hora. [CMD:hora]"},
-                {"tiempo", "Revisas el tiempo. [CMD:tiempo]"},
-                {"reloj", "Miras el reloj. [CMD:reloj]"},
+                // Volume control commands
+                {"subir volumen", "[CMD:volumen_subir]"},
+                {"bajar volumen", "[CMD:volumen_bajar]"},
+                {"aumentar volumen", "[CMD:volumen_subir]"},
+                {"disminuir volumen", "[CMD:volumen_bajar]"},
+                {"silenciar", "[CMD:volumen_silenciar]"},
+                {"silenciar audio", "[CMD:volumen_silenciar]"},
+                {"activar sonido", "[CMD:volumen_activar]"},
+                {"activar audio", "[CMD:volumen_activar]"},
+                
+                // Time commands (SIN texto adicional - el comando genera su propia narración)
+                {"hora", "[CMD:hora]"},
+                {"tiempo", "[CMD:hora]"},
+                {"reloj", "[CMD:hora]"},
                 
                 // Item actions
                 {"buscar", "Buscas cuidadosamente en la habitación. [CMD:buscar]"},
@@ -234,15 +245,19 @@ namespace VoiceSystem.AI
         {
             string lowerInput = userInput.ToLower().Trim();
             
+            Debug.Log($"[AI] GenerateResponse - Input: '{lowerInput}'");
+            
             // Special case: "qué hora es" or "que hora es" -> map to "hora" command
             if (lowerInput.Contains("qué hora") || lowerInput.Contains("que hora"))
             {
-                return "Revisas la hora. [CMD:hora]";
+                Debug.Log("[AI] Detected 'qué hora es' - returning hora command");
+                return "[CMD:hora]"; // SIN texto adicional - el comando genera su propia narración
             }
             
             // Check for exact matches first
             if (responseRules.ContainsKey(lowerInput))
             {
+                Debug.Log($"[AI] Exact match found for '{lowerInput}': {responseRules[lowerInput]}");
                 return FormatResponse(responseRules[lowerInput], context);
             }
             

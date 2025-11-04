@@ -76,14 +76,17 @@ namespace VoiceSystem.GameIntegration
             
             LogDebug($"[StoryEventTrigger] Cambio de habitación: {newRoom.roomId} ({newRoom.roomName})");
             
-            // Marcar habitación como visitada
+            // IMPORTANTE: NO marcar como visitada ANTES del trigger
+            // El trigger verifica si es primera visita, y LUEGO marca
+            
+            // Trigger entry events
+            TriggerRoomEntry(newRoom.roomId);
+            
+            // AHORA marcar como visitada DESPUÉS del trigger
             if (playerData != null)
             {
                 playerData.MarkRoomVisited(newRoom.roomId);
             }
-            
-            // Trigger entry events
-            TriggerRoomEntry(newRoom.roomId);
         }
         
         /// <summary>
@@ -122,8 +125,27 @@ namespace VoiceSystem.GameIntegration
                     var storyEvent = eventManager.GetStoryEventByTrigger(roomId, "reentry");
                     if (storyEvent != null && CheckConditions(storyEvent))
                     {
-                        ExecuteEvent(storyEvent);
-                        eventCooldowns[cooldownKey] = Time.time; // Actualizar cooldown
+                        // NUEVO: Solo disparar eventos de reentry DESPUÉS de tomar el oso
+                        // Esto evita narraciones atmosféricas intensas antes del evento principal
+                        var playerState = PlayerStateManager.Instance;
+                        bool shouldNarrate = true;
+                        
+                        // Si el evento tiene descripciones post-corrupción, requiere el evento del niño
+                        if (playerState != null && !playerState.HasSeenEvent("child_event_triggered"))
+                        {
+                            // Eventos que NO se narran antes del evento del niño
+                            if (storyEvent.eventName.Contains("Narración Corta"))
+                            {
+                                shouldNarrate = false;
+                                LogDebug($"[StoryEventTrigger] Evento '{storyEvent.eventName}' bloqueado - Requiere evento del niño");
+                            }
+                        }
+                        
+                        if (shouldNarrate)
+                        {
+                            ExecuteEvent(storyEvent);
+                            eventCooldowns[cooldownKey] = Time.time; // Actualizar cooldown
+                        }
                     }
                 }
                 else
@@ -225,9 +247,11 @@ namespace VoiceSystem.GameIntegration
             // NUEVO: Verificar si requiere un flag previo (para progresión secuencial)
             if (!string.IsNullOrEmpty(evt.requiredFlag))
             {
-                if (playerData == null || !playerData.HasSeenEvent(evt.requiredFlag))
+                bool hasFlag = playerData != null && playerData.HasSeenEvent(evt.requiredFlag);
+                LogDebug($"[StoryEventTrigger] 🔍 Evento '{evt.eventName}' requiere flag '{evt.requiredFlag}' → {(hasFlag ? "✅ TIENE" : "❌ NO TIENE")}");
+                
+                if (!hasFlag)
                 {
-                    LogDebug($"[StoryEventTrigger] Evento '{evt.eventName}' requiere flag: {evt.requiredFlag}");
                     return false;
                 }
             }
@@ -272,20 +296,52 @@ namespace VoiceSystem.GameIntegration
         /// </summary>
         private void HandleScreamer(HBEvents screamerEvent)
         {
-            var fatigueSystem = FatigueSystem.Instance;
-            if (fatigueSystem != null && fatigueSystem.PlayerLives != null)
+            // Reproducir sonido de screamer con fade
+            var soundManager = Audio.SoundManager.Instance;
+            if (soundManager != null)
             {
-                // Reducir 1 vida
-                bool stillAlive = fatigueSystem.PlayerLives.LoseLife();
-                
-                LogDebug($"[StoryEventTrigger] Screamer! Vida reducida a {fatigueSystem.PlayerLives.currentLives}. Vivo: {stillAlive}");
-                
-                // Narrar confirmación de screamer
+                string soundId = GetEventScreamerSound(screamerEvent.id);
+                soundManager.PlayScreamer(soundId, () => {
+                    // Después del sonido, narrar
+                    var confirmManager = ActionConfirmationManager.Instance;
+                    if (confirmManager != null)
+                    {
+                        confirmManager.ConfirmScreamer(screamerEvent.audioTxt);
+                    }
+                });
+            }
+            else
+            {
+                // Fallback: solo narrar
                 var confirmManager = ActionConfirmationManager.Instance;
                 if (confirmManager != null)
                 {
                     confirmManager.ConfirmScreamer(screamerEvent.audioTxt);
                 }
+            }
+            
+            // Reducir vida del jugador
+            var fatigueSystem = FatigueSystem.Instance;
+            if (fatigueSystem != null && fatigueSystem.PlayerLives != null)
+            {
+                bool stillAlive = fatigueSystem.PlayerLives.LoseLife();
+                LogDebug($"[StoryEventTrigger] Screamer! Vida reducida a {fatigueSystem.PlayerLives.currentLives}. Vivo: {stillAlive}");
+            }
+        }
+        
+        /// <summary>
+        /// Mapea ID de evento a ID de sonido de screamer
+        /// </summary>
+        private string GetEventScreamerSound(int eventId)
+        {
+            switch (eventId)
+            {
+                case 300: return "screamer_kitchen";     // Cocina Risa
+                case 301: return "screamer_bathroom";    // Baño Espejo
+                case 302: return "screamer_bedroom";     // Hab. Niños Caja Musical
+                case 303: return "screamer_dining";      // Comedor Sombra
+                case 304: return "screamer_library";     // Biblioteca Libros
+                default: return "screamer_default";
             }
         }
         

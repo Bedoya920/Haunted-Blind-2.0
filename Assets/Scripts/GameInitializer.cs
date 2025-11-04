@@ -31,8 +31,14 @@ public class GameInitializer : MonoBehaviour
     {
         Debug.Log("=== INICIANDO JUEGO ===");
         
+        // 0. CRÍTICO: Resetear PlayerData para eliminar flags de sesiones anteriores
+        ResetPlayerData();
+        
         // 1. Generar la casa
         yield return StartCoroutine(GenerateHouse());
+        
+        // 1.5. CRÍTICO: Asegurar que la puerta del sótano empiece CERRADA
+        EnsureBasementDoorLocked();
         
         // 2. Esperar a que todos los singletons se inicialicen
         yield return new WaitForSeconds(0.5f);
@@ -65,6 +71,54 @@ public class GameInitializer : MonoBehaviour
             var bellSystemObj = new GameObject("HourlyBellSystem");
             bellSystemObj.AddComponent<HourlyBellSystem>();
             Debug.Log("[GameInit] HourlyBellSystem inicializado");
+        }
+        
+        // 6.6. Inicializar ScreamerSystem
+        if (FindFirstObjectByType<ScreamerSystem>() == null)
+        {
+            var screamerObj = new GameObject("ScreamerSystem");
+            screamerObj.AddComponent<ScreamerSystem>();
+            Debug.Log("[GameInit] ScreamerSystem inicializado");
+        }
+        
+        // 6.7. Inicializar BasementDoorDialogue
+        if (FindFirstObjectByType<BasementDoorDialogue>() == null)
+        {
+            var basementDialogueObj = new GameObject("BasementDoorDialogue");
+            basementDialogueObj.AddComponent<BasementDoorDialogue>();
+            Debug.Log("[GameInit] BasementDoorDialogue inicializado");
+        }
+        
+        // 6.8. Inicializar WinConditionManager
+        if (FindFirstObjectByType<WinConditionManager>() == null)
+        {
+            var winManagerObj = new GameObject("WinConditionManager");
+            winManagerObj.AddComponent<WinConditionManager>();
+            Debug.Log("[GameInit] WinConditionManager inicializado");
+        }
+        
+        // 6.9. Inicializar LotusFlowerTransformation
+        if (FindFirstObjectByType<LotusFlowerTransformation>() == null)
+        {
+            var lotusTransformObj = new GameObject("LotusFlowerTransformation");
+            lotusTransformObj.AddComponent<LotusFlowerTransformation>();
+            Debug.Log("[GameInit] LotusFlowerTransformation inicializado");
+        }
+        
+        // 6.10. Inicializar SoundManager
+        if (FindFirstObjectByType<Audio.SoundManager>() == null)
+        {
+            var soundManagerObj = new GameObject("SoundManager");
+            soundManagerObj.AddComponent<Audio.SoundManager>();
+            Debug.Log("[GameInit] SoundManager inicializado");
+        }
+        
+        // 6.11. Inicializar AmbientMusicController
+        if (FindFirstObjectByType<Audio.AmbientMusicController>() == null)
+        {
+            var ambientMusicObj = new GameObject("AmbientMusicController");
+            ambientMusicObj.AddComponent<Audio.AmbientMusicController>();
+            Debug.Log("[GameInit] AmbientMusicController inicializado");
         }
         
         // 7. Activar reconocimiento de voz
@@ -229,6 +283,70 @@ public class GameInitializer : MonoBehaviour
         }
         
         yield return new WaitForSeconds(0.2f);
+    }
+    
+    /// <summary>
+    /// CRÍTICO: Resetea el PlayerData para eliminar flags de sesiones anteriores
+    /// Esto previene que eventos "Tras Evento del Niño" se disparen prematuramente
+    /// </summary>
+    private void ResetPlayerData()
+    {
+        // Buscar el PlayerData ScriptableObject en Resources/Data
+        var playerData = Resources.Load<VoiceSystem.Core.Data.PlayerData>("Data/PlayerData");
+        if (playerData != null)
+        {
+            // Usar reflexión para acceder a los campos privados
+            var eventFlagsField = typeof(VoiceSystem.Core.Data.PlayerData).GetField("eventFlags", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var visitedRoomsField = typeof(VoiceSystem.Core.Data.PlayerData).GetField("visitedRooms", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            if (eventFlagsField != null)
+            {
+                var eventFlags = eventFlagsField.GetValue(playerData) as System.Collections.IDictionary;
+                eventFlags?.Clear();
+            }
+            
+            if (visitedRoomsField != null)
+            {
+                var visitedRooms = visitedRoomsField.GetValue(playerData) as System.Collections.IList;
+                visitedRooms?.Clear();
+            }
+            
+            Debug.Log("[GameInit] 🔄 PlayerData reseteado - Todos los flags eliminados");
+        }
+        else
+        {
+            Debug.LogWarning("[GameInit] ⚠️ PlayerData ScriptableObject no encontrado en Resources");
+        }
+    }
+    
+    /// <summary>
+    /// CRÍTICO: Asegura que la puerta del sótano esté cerrada al inicio
+    /// Se desbloquea automáticamente a las 2 AM vía HourlyBellSystem
+    /// </summary>
+    private void EnsureBasementDoorLocked()
+    {
+        if (roomGenerator?.casa?.puertas != null)
+        {
+            // La puerta al sótano conecta Hab. Niños (0,5) con Sótano (0,6)
+            // Esta es la puerta ID 8 según el mapa
+            var basementDoor = roomGenerator.casa.puertas.Find(d =>
+                (d.cuarto1.x == 0 && d.cuarto1.y == 5 && d.cuarto2.x == 0 && d.cuarto2.y == 6) ||
+                (d.cuarto2.x == 0 && d.cuarto2.y == 5 && d.cuarto1.x == 0 && d.cuarto1.y == 6)
+            );
+            
+            if (basementDoor != null)
+            {
+                basementDoor.abierta = false; // FORZAR CERRADA
+                basementDoor.mensajeBloqueada = "La puerta está cerrada. No cede, como si algo la sostuviera desde dentro.";
+                Debug.Log($"[GameInit] ✅ Puerta del sótano (ID:{basementDoor.id}) CERRADA al inicio. Se desbloqueará a las 2 AM.");
+            }
+            else
+            {
+                Debug.LogError("[GameInit] ❌ No se encontró la puerta del sótano para cerrarla!");
+            }
+        }
     }
     
     private void NarrateWelcomeEvent()

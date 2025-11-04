@@ -220,6 +220,16 @@ public class FatigueSystem : MonoBehaviour
     }
     
     /// <summary>
+    /// Reducir fatiga (usado por consumibles)
+    /// </summary>
+    public void ReduceFatigue(int amount = 1)
+    {
+        nivelFatigaActual = Mathf.Max(0, nivelFatigaActual - amount);
+        SyncWithPlayerData(); // Sincronizar cambios
+        Debug.Log($"[FatigueSystem] Fatiga reducida -{amount}. Nivel actual: {nivelFatigaActual}/{fatigaPorVida}");
+    }
+    
+    /// <summary>
     /// Usar consumible desde RoomInventoryManager (integración con sistema de voz)
     /// </summary>
     public bool TryUseConsumableFromInventory()

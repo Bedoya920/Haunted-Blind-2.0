@@ -84,19 +84,14 @@ namespace VoiceSystem.Core.Data
         
         /// <summary>
         /// Consume actions
+        /// NOTA: La lógica de fatiga está manejada por FatigueSystem
+        /// Este método solo actualiza el contador de acciones
         /// </summary>
         public void ConsumeActions(int amount = 1)
         {
             actions = Mathf.Max(0, actions - amount);
-            fatigue += amount;
-            
-            // Check for fatigue penalty
-            if (fatigue >= 5)
-            {
-                int livesLost = fatigue / 5;
-                health = Mathf.Max(0, health - livesLost);
-                fatigue = fatigue % 5;
-            }
+            // La fatiga es manejada por FatigueSystem.AddFatigue() en GameContextProvider
+            // NO duplicar la lógica aquí
         }
         
         /// <summary>
